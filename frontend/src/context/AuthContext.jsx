@@ -284,7 +284,23 @@ export const AuthProvider = ({ children }) => {
       
       // Handle 404 or network errors (common in deployment when API is unavailable)
       if (error.response?.status === 404 || error.code === 'ECONNABORTED' || !error.response) {
-        console.warn("API endpoint unavailable (404) or network error - redirecting to dashboard");
+        console.warn("API endpoint unavailable (404) or network error - creating temporary session");
+        
+        // Create a temporary user session to allow dashboard access
+        const tempUser = {
+          id: userData.email,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profilePic: "/user.png",
+          isTemporary: true
+        };
+        
+        sessionStorage.setItem("user", JSON.stringify(tempUser));
+        sessionStorage.setItem("accessToken", "temporary_token_" + Date.now());
+        setUser(tempUser);
+        setIsAuthenticated(true);
+        
         return {
           success: false,
           code: "API_UNAVAILABLE",
