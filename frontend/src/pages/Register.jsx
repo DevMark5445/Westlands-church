@@ -751,9 +751,14 @@ export default function RegisterPage() {
       const result = await register(userData);
 
       if (result.success) {
-        setAlert({ type: "success", message: result.message || "Registration successful! Redirecting to login..." });
-        // Redirect to login after brief delay
-        setTimeout(() => navigate('/DashBoard'), 1500);
+        setAlert({ type: "success", message: result.message || "Registration successful! Redirecting to dashboard..." });
+        // Redirect to dashboard after brief delay
+        setTimeout(() => navigate('/dashboard'), 1500);
+      } else if (result.redirectToDashboard) {
+        // API unavailable (404) or network error - redirect to dashboard directly
+        console.warn("API unavailable, redirecting to dashboard");
+        setAlert({ type: "success", message: "Redirecting to dashboard..." });
+        setTimeout(() => navigate('/dashboard'), 500);
       } else {
         setAlert({ type: "danger", message: result.message || "Registration failed. Please try again." });
         triggerShake();
@@ -1069,7 +1074,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Back to login */}
-            <Link to="/DashBoard" className="back-link">
+            <Link to="/login" className="back-link">
               <ArrowLeftIcon />
               Already have an account? Sign in
             </Link>
