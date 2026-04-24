@@ -85,7 +85,7 @@ function Sidebar() {
 
   const handleLogout = () => {
     logout();
-    navigate("/home");
+    navigate("/");
   };
 
   return (
@@ -188,7 +188,7 @@ function UserMenu({ user }) {
 
   const handleLogout = () => {
     logout();
-    navigate("/home");
+    navigate("/");
   };
 
   return (
@@ -306,23 +306,23 @@ function SummaryCards() {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
       {cards.map(card => {
         const p = palettes[card.color];
         return (
-          <div key={card.label} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all duration-200">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          <div key={card.label} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-lg hover:border-gray-200 transition-all duration-300 transform hover:-translate-y-1 cursor-default">
+            <div className="flex items-start justify-between mb-5">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                    style={{ background: p.iconBg, color: p.icon }}>
                 {card.icon}
               </div>
               {card.trend && (
-                <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">{card.trend}</span>
+                <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full border border-emerald-200">{card.trend}</span>
               )}
             </div>
-            <p className="text-2xl font-bold text-gray-800 leading-none mb-1">{card.value}</p>
-            <p className="text-sm text-gray-500">{card.label}</p>
-            {card.sub && <p className="text-xs mt-1.5 font-medium" style={{ color: p.text }}>{card.sub}</p>}
+            <p className="text-3xl font-bold text-gray-900 leading-none mb-2">{card.value}</p>
+            <p className="text-sm font-medium text-gray-600 mb-2">{card.label}</p>
+            {card.sub && <p className="text-xs font-semibold" style={{ color: p.text }}>{card.sub}</p>}
           </div>
         );
       })}
@@ -573,22 +573,23 @@ function DashboardOverview() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner */}
-      <div className="rounded-2xl px-6 py-5 flex items-center justify-between gap-4 overflow-hidden relative"
-           style={{ background: "linear-gradient(135deg, #0f1724 0%, #1e3a5f 100%)" }}>
-        <div className="relative z-10">
-          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "#c9a84c" }}>Welcome back</p>
-          <h2 className="text-white text-xl font-bold">{firstName} {lastName} 👋</h2>
-          <p className="text-white/50 text-sm mt-1">{user?.department || "Westlands P.A.G"} · {user?.role || "Member"}</p>
+      {/* Welcome Banner with User Profile */}
+      <div className="rounded-3xl px-6 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 overflow-hidden relative"
+           style={{ background: "linear-gradient(135deg, #0f1724 0%, #1e3a5f 50%, #2a4480 100%)" }}>
+        <div className="relative z-10 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#e8c876" }}>Welcome to Your Dashboard</p>
+          <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight mb-2">{firstName} {lastName} 👋</h2>
+          <p className="text-white/60 text-sm mb-1">{user?.department || "Westlands P.A.G"} • {user?.role || "Member"}</p>
+          <p className="text-white/40 text-xs">Email: {user?.email || "—"}</p>
         </div>
-        <div className="hidden sm:block relative z-10 text-right">
-          <p className="text-white/40 text-xs">Member Since</p>
-          <p className="text-white font-semibold text-sm">
-            {user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-KE", { month: "long", year: "numeric" }) : "—"}
+        <div className="hidden sm:flex flex-col items-end justify-center relative z-10 bg-white/5 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/10">
+          <p className="text-white/50 text-xs uppercase tracking-wider mb-1">Member Since</p>
+          <p className="text-white font-bold text-lg" style={{ color: "#e8c876" }}>
+            {user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-KE", { month: "short", year: "numeric" }) : "—"}
           </p>
         </div>
-        <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/5" />
-        <div className="absolute -right-4 -bottom-10 w-28 h-28 rounded-full" style={{ background: "rgba(201,168,76,0.08)" }} />
+        <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-white/5 blur-3xl" />
+        <div className="absolute -left-12 -bottom-12 w-40 h-40 rounded-full" style={{ background: "rgba(201,168,76,0.08)", filter: "blur(3xl)" }} />
       </div>
 
       <SummaryCards />
@@ -611,7 +612,7 @@ export default function UserDashboard() {
   const navigate                    = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated) navigate("/DashBoard");
+    if (!isAuthenticated) navigate("/");
   }, [isAuthenticated, navigate]);
 
   const renderSection = () => {
