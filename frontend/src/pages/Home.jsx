@@ -293,7 +293,7 @@ export default function Home() {
 
   const handleLogout = () => {
     try { logout(); } catch (err) { console.error(err); }
-    navigate("/");
+    navigate("/home");
   };
 
   const auth = isAuthenticated || isLoggedIn?.();
