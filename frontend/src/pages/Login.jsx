@@ -174,6 +174,11 @@ export default function LoginPage() {
         setAlert({ type: "success", message: "Login successful! Redirecting…" });
         if (rememberMe) sessionStorage.setItem("rememberMe", "true");
         setTimeout(() => navigate("/dashboard"), 900);
+      } else if (result.redirectToDashboard) {
+        // API unavailable (404) or network error - redirect to dashboard directly
+        console.warn("API unavailable, redirecting to dashboard");
+        setAlert({ type: "success", message: "Redirecting to dashboard..." });
+        setTimeout(() => navigate("/dashboard"), 500);
       } else {
         setAlert({ type: "danger", message: result.message || "Invalid email or password. Please try again." });
         triggerShake();

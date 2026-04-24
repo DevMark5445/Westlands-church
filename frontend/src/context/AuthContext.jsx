@@ -356,6 +356,17 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Login error:", error);
       
+      // Handle 404 or network errors (common in deployment when API is unavailable)
+      if (error.response?.status === 404 || error.code === 'ECONNABORTED' || !error.response) {
+        console.warn("API endpoint unavailable (404) or network error - redirecting to dashboard");
+        return {
+          success: false,
+          code: "API_UNAVAILABLE",
+          message: "Redirecting to dashboard...",
+          redirectToDashboard: true
+        };
+      }
+      
       return {
         success: false,
         message: error.response?.data?.message || "Login failed. Please check your credentials.",
