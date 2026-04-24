@@ -85,7 +85,7 @@ function Sidebar() {
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    navigate("/home");
   };
 
   return (
@@ -611,7 +611,7 @@ export default function UserDashboard() {
   const navigate                    = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated) navigate("/");
+    if (!isAuthenticated) navigate("/DashBoard");
   }, [isAuthenticated, navigate]);
 
   const renderSection = () => {
