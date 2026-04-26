@@ -753,12 +753,12 @@ export default function RegisterPage() {
       if (result.success) {
         setAlert({ type: "success", message: result.message || "Registration successful! Redirecting to dashboard..." });
         // Redirect to dashboard after brief delay
-        setTimeout(() => navigate('/dashboard'), 1500);
+        setTimeout(() => navigate('/dashboard', { replace: true }), 800);
       } else if (result.redirectToDashboard) {
         // API unavailable (404) or network error - redirect to dashboard directly
         console.warn("API unavailable, redirecting to dashboard");
         setAlert({ type: "success", message: "Redirecting to dashboard..." });
-        setTimeout(() => navigate('/dashboard'), 500);
+        setTimeout(() => navigate('/dashboard', { replace: true }), 300);
       } else {
         setAlert({ type: "danger", message: result.message || "Registration failed. Please try again." });
         triggerShake();

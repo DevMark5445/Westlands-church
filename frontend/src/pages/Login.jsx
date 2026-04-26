@@ -164,21 +164,32 @@ export default function LoginPage() {
   const triggerShake = () => { setShake(true); setTimeout(() => setShake(false), 420); };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); setAlert(null);
+    e.preventDefault(); 
+    setAlert(null);
     const errs = validate(email, password);
-    if (Object.keys(errs).length) { setErrors(errs); triggerShake(); return; }
-    setErrors({}); setLoading(true);
+    if (Object.keys(errs).length) { 
+      setErrors(errs); 
+      triggerShake(); 
+      return; 
+    }
+    setErrors({}); 
+    setLoading(true);
     try {
       const result = await login(email, password);
       if (result.success) {
         setAlert({ type: "success", message: "Login successful! Redirecting…" });
         if (rememberMe) sessionStorage.setItem("rememberMe", "true");
-        setTimeout(() => navigate("/dashboard"), 900);
+        // Navigate immediately instead of waiting for state update
+        setTimeout(() => {
+          navigate("/DashBoard", { replace: true });
+        }, 500);
       } else if (result.redirectToDashboard) {
         // API unavailable (404) or network error - redirect to dashboard directly
         console.warn("API unavailable, redirecting to dashboard");
         setAlert({ type: "success", message: "Redirecting to dashboard..." });
-        setTimeout(() => navigate("/dashboard"), 500);
+        setTimeout(() => {
+          navigate("/DashBoard", { replace: true });
+        }, 300);
       } else {
         setAlert({ type: "danger", message: result.message || "Invalid email or password. Please try again." });
         triggerShake();
@@ -294,7 +305,7 @@ export default function LoginPage() {
               <div className="form-divider-line" />
             </div>
 
-            <a href="/home" className="back-home"><ArrowLeftIcon />Back to homepage</a>
+            <a href="/Home" className="back-home"><ArrowLeftIcon />Back to homepage</a>
 
             <p className="form-footer-note">
               Need help? Contact your <a href="mailto:support@westlandspag.org">church administrator</a> or visit our <a href="/support">support centre</a>.

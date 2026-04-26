@@ -460,6 +460,7 @@ export const AuthProvider = ({ children }) => {
       logout, 
       isLoggedIn,
       isAuthenticated,
+      isInitialized,
       register,
       // loginWithGoogle,
     }}>

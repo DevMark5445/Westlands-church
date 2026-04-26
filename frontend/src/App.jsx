@@ -6,11 +6,11 @@ import Register from './pages/Register';
 import DashBoard from './pages/DashBoard';
 import { AuthProvider } from './context/AuthContext';
 
-
-
 function AppLayout() {
   const location = useLocation();
-  const showNavbar = location.pathname === '/'; // Show only on home
+  // Show navbar only on home page (not on login, register, or dashboard)
+  // Dashboard has its own navbar built-in
+  const showNavbar = location.pathname === '/';
 
   return (
     <>
@@ -20,7 +20,6 @@ function AppLayout() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<DashBoard />} />
         <Route path="/register" element={<Register />} />
-        {/* Add other routes */}
       </Routes>
     </>
   );
