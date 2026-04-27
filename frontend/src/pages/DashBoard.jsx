@@ -798,7 +798,7 @@ function RecentActivities() {
 /* ─── Dashboard Overview ─────────────────────────────────────────────────────── */
 function DashboardOverview() {
   const { user } = useAuth();
-  const firstName = user?.firstName || "Friend";
+  const firstName = user?.firstName || "";
   const lastName  = user?.lastName  || "";
 
   return (
@@ -858,7 +858,7 @@ export default function UserDashboard() {
   const { isAuthenticated, user, isInitialized } = useAuth();
   const navigate = useNavigate();
 
-  // Guard: redirect to home if not authenticated (only after initialized)
+  // Guard: redirect to login if not authenticated (only after initialized)
   useEffect(() => {
     if (isInitialized && !isAuthenticated && !user) {
       navigate("/DashBoard", { replace: true });

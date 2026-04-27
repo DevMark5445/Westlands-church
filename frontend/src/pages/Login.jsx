@@ -176,25 +176,18 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const result = await login(email, password);
+      console.log("Login result:", result);
       if (result.success) {
         setAlert({ type: "success", message: "Login successful! Redirecting…" });
         if (rememberMe) sessionStorage.setItem("rememberMe", "true");
-        // Navigate immediately instead of waiting for state update
-        setTimeout(() => {
-          navigate("/DashBoard", { replace: true });
-        }, 500);
-      } else if (result.redirectToDashboard) {
-        // API unavailable (404) or network error - redirect to dashboard directly
-        console.warn("API unavailable, redirecting to dashboard");
-        setAlert({ type: "success", message: "Redirecting to dashboard..." });
-        setTimeout(() => {
-          navigate("/DashBoard", { replace: true });
-        }, 300);
+        // Navigate immediately
+        navigate("/dashboard", { replace: true });
       } else {
         setAlert({ type: "danger", message: result.message || "Invalid email or password. Please try again." });
         triggerShake();
       }
     } catch (error) {
+      console.error("Submit error:", error);
       setAlert({ type: "danger", message: error.message || "Network error. Please check your connection." });
       triggerShake();
     } finally { setLoading(false); }
@@ -305,7 +298,7 @@ export default function LoginPage() {
               <div className="form-divider-line" />
             </div>
 
-            <a href="/Home" className="back-home"><ArrowLeftIcon />Back to homepage</a>
+            <a href="/" className="back-home"><ArrowLeftIcon />Back to homepage</a>
 
             <p className="form-footer-note">
               Need help? Contact your <a href="mailto:support@westlandspag.org">church administrator</a> or visit our <a href="/support">support centre</a>.
