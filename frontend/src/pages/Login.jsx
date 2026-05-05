@@ -300,9 +300,40 @@ export default function LoginPage() {
             <p className="form-footer-note">
               Need help? Contact your <a href="mailto:support@westlandspag.org">church administrator</a> or visit our <a href="/support">support centre</a>.
             </p>
-            <p style={{ marginTop:"1rem", fontSize:".85rem", textAlign:"center", color:"var(--text-body)" }}>
-              Don't have an account? <Link to="/register" style={{ color:"var(--gold)", fontWeight:400 }}>Create one here</Link>
-            </p>
+            
+            <div style={{ marginTop:"1.8rem", display:"flex", flexDirection:"column", alignItems:"center", gap:"1rem" }}>
+              <p style={{ fontSize:".85rem", color:"var(--text-body)" }}>Don't have an account?</p>
+              <Link to="/register" style={{ 
+                display:"inline-flex",
+                alignItems:"center",
+                justifyContent:"center",
+                gap:".55rem",
+                padding:".85rem 1.8rem",
+                borderRadius:"8px",
+                background:"linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%)",
+                color:"var(--navy)",
+                fontSize:".85rem",
+                fontWeight:"700",
+                letterSpacing:".08em",
+                textTransform:"uppercase",
+                textDecoration:"none",
+                boxShadow:"0 4px 20px rgba(201,168,76,.35)",
+                transition:"transform .22s cubic-bezier(0.4,0,0.2,1), box-shadow .22s cubic-bezier(0.4,0,0.2,1), filter .22s",
+                cursor:"pointer"
+              }}
+              onMouseEnter={e => {
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.boxShadow = "0 8px 30px rgba(201,168,76,.45)";
+                e.target.style.filter = "brightness(1.04)";
+              }}
+              onMouseLeave={e => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 4px 20px rgba(201,168,76,.35)";
+                e.target.style.filter = "brightness(1)";
+              }}>
+                Create Account
+              </Link>
+            </div>
 
             {/* Development Mode Info */}
             <div style={{ marginTop:"2rem", padding:"1rem", backgroundColor:"rgba(59, 130, 246, 0.1)", borderRadius:"8px", border:"1px solid rgba(59, 130, 246, 0.3)" }}>
