@@ -43,11 +43,11 @@ const getInitials = (f, l) => `${(f || "").charAt(0)}${(l || "").charAt(0)}`.toU
 /* ─── Skeleton Components ────────────────────────────────────────────────────── */
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 md:p-6 shadow-sm">
-      <div className="flex items-start justify-between mb-4 sm:mb-5">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gray-200 animate-pulse" />
+    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+      <div className="flex items-start justify-between mb-5">
+        <div className="w-12 h-12 rounded-xl bg-gray-200 animate-pulse" />
       </div>
-      <div className="h-6 sm:h-8 w-20 bg-gray-200 rounded animate-pulse mb-3" />
+      <div className="h-8 w-20 bg-gray-200 rounded animate-pulse mb-3" />
       <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-2" />
       <div className="h-3 w-24 bg-gray-100 rounded animate-pulse" />
     </div>
@@ -56,7 +56,7 @@ function SkeletonCard() {
 
 function SkeletonSummaryCards() {
   return (
-    <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
     </div>
   );
@@ -64,16 +64,16 @@ function SkeletonSummaryCards() {
 
 function SkeletonSection() {
   return (
-    <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="px-6 py-4 border-b border-gray-100">
         <div className="h-5 w-40 bg-gray-200 rounded animate-pulse mb-2" />
         <div className="h-3 w-32 bg-gray-100 rounded animate-pulse" />
       </div>
       <div className="space-y-0">
         {[1, 2, 3].map(i => (
-          <div key={i} className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-50 last:border-b-0">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gray-200 animate-pulse flex-shrink-0" />
+          <div key={i} className="px-6 py-4 border-b border-gray-50 last:border-b-0">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-gray-200 animate-pulse flex-shrink-0" />
               <div className="flex-1">
                 <div className="h-4 w-48 bg-gray-200 rounded animate-pulse mb-2" />
                 <div className="h-3 w-32 bg-gray-100 rounded animate-pulse" />
@@ -88,14 +88,14 @@ function SkeletonSection() {
 
 function SkeletonTable() {
   return (
-    <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="px-6 py-4 border-b border-gray-100">
         <div className="h-5 w-40 bg-gray-200 rounded animate-pulse mb-2" />
         <div className="h-3 w-32 bg-gray-100 rounded animate-pulse" />
       </div>
       <div className="hidden sm:block">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="px-4 sm:px-6 py-3 sm:py-3.5 border-b border-gray-50 last:border-b-0 flex items-center gap-4">
+          <div key={i} className="px-6 py-3.5 border-b border-gray-50 last:border-b-0 flex items-center gap-4">
             <div className="h-6 w-24 bg-gray-200 rounded animate-pulse" />
             <div className="h-6 w-32 bg-gray-200 rounded animate-pulse" />
             <div className="h-6 w-24 bg-gray-200 rounded animate-pulse flex-1" />
@@ -121,20 +121,13 @@ function SkeletonTable() {
 
 function SkeletonDashboardOverview() {
   return (
-    <div className="space-y-5 sm:space-y-6">
-      {/* Welcome Banner */}
-      <div className="rounded-2xl sm:rounded-3xl px-4 sm:px-6 py-6 sm:py-8 bg-gradient-to-br from-gray-200 to-gray-100 animate-pulse" />
-
-      {/* Summary Cards */}
+    <div className="space-y-6">
+      <div className="rounded-3xl px-6 py-8 bg-gradient-to-br from-gray-200 to-gray-100 animate-pulse h-40" />
       <SkeletonSummaryCards />
-
-      {/* Recent Activities & Events */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SkeletonSection />
         <SkeletonSection />
       </div>
-
-      {/* Contributions Table */}
       <SkeletonTable />
     </div>
   );
@@ -143,13 +136,13 @@ function SkeletonDashboardOverview() {
 /* ─── Avatar ─────────────────────────────────────────────────────────────────── */
 function Avatar({ firstName, lastName, size = "md" }) {
   const sizes = {
-    sm: "w-8 h-8 text-xs",
-    md: "w-9 h-9 text-sm",
+    sm: "w-8 h-8 text-xs rounded-full",
+    md: "w-9 h-9 text-sm rounded-full",
     lg: "w-20 h-20 text-2xl rounded-2xl shadow-lg",
   };
   return (
     <div
-      className={`${sizes[size]} ${size !== "lg" ? "rounded-full" : ""} flex items-center justify-center flex-shrink-0 select-none font-bold`}
+      className={`${sizes[size]} flex items-center justify-center flex-shrink-0 select-none font-bold`}
       style={{ background: "linear-gradient(135deg, #c9a84c 0%, #e8c876 100%)", color: "#14213d" }}
     >
       {getInitials(firstName, lastName)}
@@ -168,7 +161,7 @@ const CrossIcon = ({ size = 16 }) => (
 /* ─── Nav Items ──────────────────────────────────────────────────────────────── */
 const NAV = [
   {
-    id: "dashboard", label: "dashboard",
+    id: "dashboard", label: "Dashboard",
     icon: <><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></>,
   },
   {
@@ -202,20 +195,20 @@ function Sidebar() {
         />
       )}
       <aside
-        className={`fixed top-0 left-0 z-30 h-screen w-56 sm:w-64 flex flex-col text-white transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:z-auto overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed top-0 left-0 z-30 h-screen w-64 flex flex-col text-white transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:z-auto overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
         style={{ background: "linear-gradient(180deg,#0f1724 0%,#14213d 100%)" }}
       >
         {/* Logo */}
-        <div className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 py-4 sm:py-5 border-b border-white/10 flex-shrink-0">
+        <div className="flex items-center gap-3 px-5 py-5 border-b border-white/10 flex-shrink-0">
           <div
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
             style={{ background: "linear-gradient(135deg,#c9a84c 0%,#e8c876 100%)", color: "#14213d" }}
           >
             <CrossIcon size={14} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs sm:text-sm font-semibold tracking-wide truncate" style={{ fontFamily: "'Cinzel',serif" }}>Westlands</p>
-            <p className="text-[9px] sm:text-[10px] tracking-widest uppercase" style={{ color: "#c9a84c" }}>P.A.G Church</p>
+            <p className="text-sm font-semibold tracking-wide truncate" style={{ fontFamily: "'Cinzel',serif" }}>Westlands</p>
+            <p className="text-[10px] tracking-widest uppercase" style={{ color: "#c9a84c" }}>P.A.G Church</p>
           </div>
           <button
             className="ml-auto lg:hidden text-white/50 hover:text-white transition-colors flex-shrink-0"
@@ -229,15 +222,15 @@ function Sidebar() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-2.5 sm:px-3 py-4 sm:py-5 space-y-0.5 overflow-y-auto">
-          <p className="px-3 pb-3 text-[9px] sm:text-[10px] uppercase tracking-widest text-white/30 font-medium">Menu</p>
+        <nav className="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
+          <p className="px-3 pb-3 text-[10px] uppercase tracking-widest text-white/30 font-medium">Menu</p>
           {NAV.map((item) => {
             const active = section === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => nav(item.id)}
-                className={`w-full flex items-center gap-2.5 sm:gap-3 px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-150 text-left ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 text-left ${
                   active ? "text-white shadow-lg" : "text-white/60 hover:text-white hover:bg-white/5"
                 }`}
                 style={active ? { background: "linear-gradient(135deg,#c9a84c22 0%,#c9a84c11 100%)", borderLeft: "2px solid #c9a84c" } : {}}
@@ -259,10 +252,10 @@ function Sidebar() {
         </nav>
 
         {/* Logout */}
-        <div className="px-2.5 sm:px-3 py-3 sm:py-4 border-t border-white/10 flex-shrink-0">
+        <div className="px-3 py-4 border-t border-white/10 flex-shrink-0">
           <button
             onClick={() => { logout(); navigate("/login", { replace: true }); }}
-            className="w-full flex items-center gap-2.5 sm:gap-3 px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-all"
           >
             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -287,8 +280,8 @@ function NotifPanel({ onClose }) {
   }, [onClose]);
 
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-2 w-72 sm:w-80 max-h-96 bg-white rounded-xl sm:rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden flex flex-col">
-      <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+    <div ref={ref} className="absolute right-0 top-full mt-2 w-80 max-h-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden flex flex-col">
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
         <h3 className="text-sm font-semibold text-gray-800">Notifications</h3>
         <span className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 whitespace-nowrap" style={{ background: "#c9a84c22", color: "#c9a84c" }}>
           {notifData.filter(n => !n.read).length} new
@@ -296,7 +289,7 @@ function NotifPanel({ onClose }) {
       </div>
       <ul className="divide-y divide-gray-50 overflow-y-auto flex-1">
         {notifData.map(n => (
-          <li key={n.id} className={`px-3 sm:px-4 py-2.5 sm:py-3 flex gap-3 ${!n.read ? "bg-amber-50/40" : ""}`}>
+          <li key={n.id} className={`px-4 py-3 flex gap-3 ${!n.read ? "bg-amber-50/40" : ""}`}>
             <div className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ background: "#c9a84c" }} />
             <div className="min-w-0">
               <p className="text-sm text-gray-700 break-words">{n.message}</p>
@@ -305,7 +298,7 @@ function NotifPanel({ onClose }) {
           </li>
         ))}
       </ul>
-      <div className="px-3 sm:px-4 py-2 sm:py-2.5 border-t border-gray-100 text-center flex-shrink-0">
+      <div className="px-4 py-2.5 border-t border-gray-100 text-center flex-shrink-0">
         <button className="text-xs font-medium" style={{ color: "#c9a84c" }}>Mark all as read</button>
       </div>
     </div>
@@ -344,7 +337,7 @@ function UserMenu({ user }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1.5 rounded-lg sm:rounded-xl hover:bg-gray-100 transition-colors duration-150"
+        className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-colors duration-150"
         aria-label="User menu"
         aria-expanded={open}
         aria-haspopup="true"
@@ -363,9 +356,8 @@ function UserMenu({ user }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-60 sm:w-64 bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-          {/* User info header */}
-          <div className="px-4 py-3 sm:py-4 border-b border-gray-100 flex items-center gap-3">
+        <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+          <div className="px-4 py-4 border-b border-gray-100 flex items-center gap-3">
             <Avatar firstName={firstName} lastName={lastName} size="md" />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-gray-800 truncate">{firstName} {lastName}</p>
@@ -378,8 +370,6 @@ function UserMenu({ user }) {
               </span>
             </div>
           </div>
-
-          {/* Actions */}
           <div className="py-1">
             <button
               onClick={() => goTo("profile")}
@@ -400,8 +390,6 @@ function UserMenu({ user }) {
               <span className="truncate">My Contributions</span>
             </button>
           </div>
-
-          {/* Logout */}
           <div className="border-t border-gray-100 py-1">
             <button
               onClick={handleLogout}
@@ -437,7 +425,7 @@ function Navbar() {
 
   return (
     <header
-      className="sticky top-0 z-40 bg-white border-b border-gray-100 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4"
+      className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 md:px-6 py-3 flex items-center gap-4"
       style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}
     >
       {/* Hamburger */}
@@ -455,18 +443,18 @@ function Navbar() {
 
       {/* Title */}
       <div className="flex-1 min-w-0">
-        <h1 className="text-sm sm:text-base font-semibold text-gray-800 truncate">{labels[section] || "Dashboard"}</h1>
+        <h1 className="text-base font-semibold text-gray-800 truncate">{labels[section] || "Dashboard"}</h1>
         <p className="text-xs text-gray-400 hidden sm:block">
           {new Date().toLocaleDateString("en-KE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </p>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3">
+      <div className="flex items-center gap-3">
         {/* Notifications */}
         <div className="relative">
           <button
             onClick={() => setShowNotif(v => !v)}
-            className="relative p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors flex-shrink-0"
+            className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors flex-shrink-0"
             aria-label={`Notifications${unread > 0 ? `, ${unread} unread` : ""}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
@@ -483,7 +471,7 @@ function Navbar() {
           {showNotif && <NotifPanel onClose={() => setShowNotif(false)} />}
         </div>
 
-        <div className="w-px h-5 sm:h-6 bg-gray-200 hidden sm:block" />
+        <div className="w-px h-6 bg-gray-200 hidden sm:block" />
 
         {/* User Menu */}
         <UserMenu user={user} />
@@ -560,30 +548,28 @@ function SummaryCards() {
   };
 
   return (
-    <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
       {cards.map(card => {
         const p = palettes[card.color];
         return (
           <div
             key={card.label}
-            className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-lg hover:border-gray-200 transition-all duration-300 hover:-translate-y-0.5 cursor-default"
+            className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-lg hover:border-gray-200 transition-all duration-300 hover:-translate-y-0.5 cursor-default"
           >
             <div className="flex items-start justify-between mb-4 sm:mb-5">
               <div
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{ background: p.iconBg, color: p.iconColor }}
               >
-                <div className="w-4 h-4 sm:w-5 sm:h-5">
-                  {card.icon}
-                </div>
+                {card.icon}
               </div>
               {card.subPositive && (
-                <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-emerald-200 whitespace-nowrap">
+                <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 whitespace-nowrap hidden sm:inline-flex">
                   {card.sub}
                 </span>
               )}
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 leading-none mb-1 sm:mb-2 truncate">{card.value}</p>
+            <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 leading-none mb-1 sm:mb-2 truncate">{card.value}</p>
             <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1 line-clamp-2">{card.label}</p>
             {!card.subPositive && (
               <p className="text-xs font-semibold" style={{ color: p.subColor }}>{card.sub}</p>
@@ -669,7 +655,7 @@ function ProfileSection() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
               {[
                 ["Email",        user?.email      || "—"],
                 ["Phone",        user?.phone      || "—"],
@@ -702,8 +688,8 @@ function ContributionsSection({ limit }) {
   const total = contributions.reduce((s, c) => s + c.amount, 0);
 
   return (
-    <section className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-2 sm:gap-3">
+    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-2 sm:gap-3">
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-gray-800">My Contributions</h2>
           <p className="text-xs text-gray-400 mt-0.5">
@@ -727,19 +713,19 @@ function ContributionsSection({ limit }) {
           <tbody className="divide-y divide-gray-50">
             {data.map(c => (
               <tr key={c.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-4 sm:px-6 py-3 sm:py-3.5">
+                <td className="px-4 sm:px-6 py-3.5">
                   <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${TYPE_COLORS[c.type] || "bg-gray-100 text-gray-600"}`}>
                     {c.type}
                   </span>
                 </td>
-                <td className="px-4 sm:px-6 py-3 sm:py-3.5 font-semibold text-gray-800">{fmtCur(c.amount)}</td>
-                <td className="px-4 sm:px-6 py-3 sm:py-3.5 text-gray-500">{fmtDate(c.date)}</td>
-                <td className="px-4 sm:px-6 py-3 sm:py-3.5">
+                <td className="px-4 sm:px-6 py-3.5 font-semibold text-gray-800">{fmtCur(c.amount)}</td>
+                <td className="px-4 sm:px-6 py-3.5 text-gray-500">{fmtDate(c.date)}</td>
+                <td className="px-4 sm:px-6 py-3.5">
                   <span className="inline-flex items-center gap-1 text-xs text-emerald-700 font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{c.status}
                   </span>
                 </td>
-                <td className="px-4 sm:px-6 py-3 sm:py-3.5">
+                <td className="px-4 sm:px-6 py-3.5">
                   <button className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-amber-600 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-amber-50">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -758,7 +744,7 @@ function ContributionsSection({ limit }) {
       {/* Mobile list */}
       <ul className="sm:hidden divide-y divide-gray-100">
         {data.map(c => (
-          <li key={c.id} className="px-4 py-3 sm:py-4">
+          <li key={c.id} className="px-4 py-4">
             <div className="flex items-start justify-between mb-2">
               <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${TYPE_COLORS[c.type] || "bg-gray-100 text-gray-600"}`}>
                 {c.type}
@@ -797,8 +783,8 @@ function EventsSection({ limit }) {
   const data = limit ? upcomingEvents.slice(0, limit) : upcomingEvents;
 
   return (
-    <section className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
         <h2 className="text-base font-semibold text-gray-800">Upcoming Events</h2>
         <p className="text-xs text-gray-400 mt-0.5">{data.length} events coming up</p>
       </div>
@@ -806,24 +792,24 @@ function EventsSection({ limit }) {
         {data.map(ev => {
           const d = new Date(ev.date);
           return (
-            <li key={ev.id} className="px-4 sm:px-6 py-3 sm:py-4 flex items-start gap-3 sm:gap-4 hover:bg-gray-50/50 transition-colors">
-              <div className="flex-shrink-0 w-12 text-center bg-gray-50 rounded-lg sm:rounded-xl px-2 py-2 border border-gray-100">
+            <li key={ev.id} className="px-4 sm:px-6 py-4 flex items-start gap-4 hover:bg-gray-50/50 transition-colors">
+              <div className="flex-shrink-0 w-12 text-center bg-gray-50 rounded-xl px-2 py-2 border border-gray-100">
                 <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">
                   {d.toLocaleDateString("en-KE", { weekday: "short" })}
                 </p>
-                <p className="text-lg sm:text-xl font-bold text-gray-800 leading-tight">{d.getDate()}</p>
+                <p className="text-xl font-bold text-gray-800 leading-tight">{d.getDate()}</p>
                 <p className="text-[10px] text-gray-400 uppercase">
                   {d.toLocaleDateString("en-KE", { month: "short" })}
                 </p>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 mb-1 sm:mb-1.5">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 mb-1.5">
                   <h3 className="text-sm font-semibold text-gray-800 line-clamp-2">{ev.name}</h3>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 whitespace-nowrap ${CAT_STYLES[ev.category] || "bg-gray-100 text-gray-600"}`}>
                     {ev.category}
                   </span>
                 </div>
-                <div className="flex flex-col gap-1 sm:gap-0 sm:flex-row sm:items-center sm:gap-3">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
                   <span className="flex items-center gap-1 text-xs text-gray-400">
                     <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                       <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
@@ -865,22 +851,20 @@ const ACT_ICONS = {
 
 function RecentActivities() {
   return (
-    <section className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
         <h2 className="text-base font-semibold text-gray-800">Recent Activity</h2>
       </div>
       <ul className="divide-y divide-gray-50">
         {recentActivities.map(a => {
           const ic = ACT_ICONS[a.icon] || ACT_ICONS.event;
           return (
-            <li key={a.id} className="px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3 sm:gap-4">
+            <li key={a.id} className="px-4 sm:px-6 py-4 flex items-center gap-4">
               <div
-                className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0"
+                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{ background: ic.bg, color: ic.color }}
               >
-                <div className="w-4 h-4">
-                  {ic.el}
-                </div>
+                {ic.el}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-800 truncate">{a.action}</p>
@@ -906,20 +890,18 @@ function DashboardOverview() {
   const lastName  = user?.lastName  || "";
 
   return (
-    <div className="space-y-5 sm:space-y-6">
+    <div className="space-y-6">
       {/* Welcome Banner */}
       <div
-        className="rounded-2xl sm:rounded-3xl px-4 sm:px-6 py-6 sm:py-8 relative overflow-hidden"
+        className="rounded-3xl px-5 sm:px-6 py-7 sm:py-8 relative overflow-hidden"
         style={{ background: "linear-gradient(135deg,#0f1724 0%,#1e3a5f 50%,#2a4480 100%)" }}
       >
-        {/* Decorative blobs — contained inside the banner */}
         <div className="absolute right-0 top-0 w-48 h-48 rounded-full pointer-events-none"
           style={{ background: "rgba(255,255,255,0.04)", filter: "blur(40px)", transform: "translate(30%,-30%)" }} />
         <div className="absolute left-0 bottom-0 w-40 h-40 rounded-full pointer-events-none"
           style={{ background: "rgba(201,168,76,0.07)", filter: "blur(36px)", transform: "translate(-30%,30%)" }} />
 
-        {/* Content row */}
-        <div className="relative z-10 flex flex-col gap-4">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#e8c876" }}>
               Welcome to Your Dashboard
@@ -931,7 +913,7 @@ function DashboardOverview() {
             <p className="text-white/40 text-xs break-all">Email: {user?.email || "—"}</p>
           </div>
           <div
-            className="flex flex-col items-center justify-center sm:w-fit rounded-2xl px-4 sm:px-5 py-3 sm:py-4 border text-center"
+            className="flex flex-col items-center justify-center sm:w-fit rounded-2xl px-5 py-4 border text-center flex-shrink-0"
             style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.12)", backdropFilter: "blur(8px)" }}
           >
             <p className="text-white/50 text-xs uppercase tracking-wider mb-1">Member Since</p>
@@ -946,7 +928,7 @@ function DashboardOverview() {
 
       <SummaryCards />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RecentActivities />
         <EventsSection limit={3} />
       </div>
@@ -955,31 +937,28 @@ function DashboardOverview() {
     </div>
   );
 }
+
 /* ─── Root ───────────────────────────────────────────────────────────────────── */
 export default function UserDashboard() {
-  const [section,       setSection]       = useState("DashBoard");
+  // FIX: was "DashBoard" (capital B) — must match nav item id "dashboard"
+  const [section,       setSection]       = useState("dashboard");
   const [sidebarOpen,   setSidebarOpen]   = useState(false);
   const [isLoading,     setIsLoading]     = useState(true);
   const { isAuthenticated, user, isInitialized } = useAuth();
   const navigate = useNavigate();
 
-  // Guard: redirect to login if not authenticated (only after initialized)
   useEffect(() => {
     if (isInitialized && !isAuthenticated && !user) {
       navigate("/login", { replace: true });
     }
   }, [isInitialized, isAuthenticated, user, navigate]);
 
-  // Show loading skeleton when component mounts or section changes
   useEffect(() => {
     setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 600); // Skeleton loads for 600ms
+    const timer = setTimeout(() => setIsLoading(false), 600);
     return () => clearTimeout(timer);
   }, [section]);
 
-  // Show loading state while auth context is initializing
   if (!isInitialized) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -992,15 +971,14 @@ export default function UserDashboard() {
   }
 
   const renderSection = () => {
-    // Show loading skeleton
     if (isLoading) {
-      if (section === "dashboard") return <SkeletonDashboardOverview />;
-      if (section === "profile") return <SkeletonSection />;
       if (section === "contributions") return <SkeletonTable />;
+      if (section === "profile") return <SkeletonSection />;
       if (section === "events") return <SkeletonSection />;
+      // dashboard (default)
+      return <SkeletonDashboardOverview />;
     }
 
-    // Show actual content
     switch (section) {
       case "dashboard":     return <DashboardOverview />;
       case "profile":       return <ProfileSection />;

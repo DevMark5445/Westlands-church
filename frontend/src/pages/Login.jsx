@@ -303,6 +303,23 @@ export default function LoginPage() {
             <p style={{ marginTop:"1rem", fontSize:".85rem", textAlign:"center", color:"var(--text-body)" }}>
               Don't have an account? <Link to="/register" style={{ color:"var(--gold)", fontWeight:400 }}>Create one here</Link>
             </p>
+
+            {/* Development Mode Info */}
+            <div style={{ marginTop:"2rem", padding:"1rem", backgroundColor:"rgba(59, 130, 246, 0.1)", borderRadius:"8px", border:"1px solid rgba(59, 130, 246, 0.3)" }}>
+              <p style={{ fontSize:".75rem", fontWeight:"600", color:"var(--navy)", marginBottom:".5rem", textTransform:"uppercase", letterSpacing:".05em" }}>
+                🔧 Development Mode
+              </p>
+              <p style={{ fontSize:".75rem", color:"var(--text-body)", lineHeight:"1.5" }}>
+                To test different dashboards, use these email patterns:
+              </p>
+              <ul style={{ fontSize:".75rem", color:"var(--text-body)", lineHeight:"1.8", marginTop:".5rem", marginLeft:"1rem" }}>
+                <li>📱 <strong>Member Dashboard:</strong> Any email (e.g., user@church.org)</li>
+                <li>👨‍💼 <strong>Admin Dashboard:</strong> Email with "admin" (e.g., admin@church.org)</li>
+              </ul>
+              <p style={{ fontSize:".7rem", color:"rgba(90, 100, 120, 0.7)", marginTop:".6rem", fontStyle:"italic" }}>
+                Password can be any value (6+ characters) when backend is unavailable.
+              </p>
+            </div>
           </div>
         </main>
       </div>

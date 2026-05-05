@@ -388,16 +388,23 @@ export const AuthProvider = ({ children }) => {
       if (error.response?.status === 404 || error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK' || !error.response) {
         console.warn("API endpoint unavailable (404) or network error - creating temporary session");
         
+        // Determine role based on email pattern (for development/testing)
+        // Admin access: use emails containing "admin"
+        const isAdminEmail = email.toLowerCase().includes("admin");
+        
         // Create a temporary user session to allow dashboard access
         const tempUser = {
           id: email,
           email: email,
           firstName: email.split("@")[0],
-          lastName: "",
+          lastName: "User",
           profilePic: "/user.png",
-          role: "Member",
+          role: isAdminEmail ? "Admin" : "Member",
+          status: "active",
           isTemporary: true
         };
+        
+        console.log(`Mock session created for ${tempUser.role} role (${email})`);
         
         sessionStorage.setItem("user", JSON.stringify(tempUser));
         sessionStorage.setItem("accessToken", "temporary_token_" + Date.now());
@@ -407,7 +414,7 @@ export const AuthProvider = ({ children }) => {
         return {
           success: true,
           code: "API_UNAVAILABLE",
-          message: "Redirecting to dashboard...",
+          message: `Development mode: ${tempUser.role} account created`,
           redirectToDashboard: false
         };
       }
