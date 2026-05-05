@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Cross, LogIn } from "lucide-react";
 
+
 /* ─── Navbar ─── */
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -73,6 +74,7 @@ const Navbar = () => {
         </Link>
       </nav>
     </header>
+
   );
 };
 

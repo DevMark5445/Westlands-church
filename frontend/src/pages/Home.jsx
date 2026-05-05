@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { LogIn } from "lucide-react";
+import Footer from "../components/Footer";
 
 // ─── SVG Atoms ────────────────────────────────────────────────────────────────
 const CrossSvg = ({ size = 20 }) => (
@@ -264,25 +265,6 @@ function CtaSection() {
         </Link>
       </div>
     </section>
-  );
-}
-
-// ─── Footer ───────────────────────────────────────────────────────────────────
-function Footer() {
-  return (
-    <footer className="py-6" style={{ background: "#14213d", borderTop: "1px solid rgba(201,168,76,0.15)" }}>
-      <div className="max-w-6xl mx-auto px-6 md:px-10 flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg, #c9a84c 0%, #e8c876 100%)", color: "#14213d" }}>
-            <CrossSvg size={14} />
-          </div>
-          <span className="font-semibold tracking-wide" style={{ fontFamily: "'Cinzel', serif", fontSize: ".85rem", color: "#f7f4ee" }}>Westlands P.A.G</span>
-        </div>
-        <p style={{ fontSize: ".75rem", fontWeight: 300, color: "rgba(247,244,238,0.4)" }}>
-          &copy; {new Date().getFullYear()} Westlands P.A.G Church Management System. All rights reserved.
-        </p>
-      </div>
-    </footer>
   );
 }
 
