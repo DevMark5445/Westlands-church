@@ -3,6 +3,99 @@ import { useState, useRef, useEffect, createContext, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+/* ─── Theme CSS (matches AdminDashboard exactly) ─────────────────────────────── */
+const THEME_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap');
+  :root {
+    --navy: #14213d; --navy-mid: #1e3160; --navy-light: #2a4480;
+    --gold: #c9a84c; --gold-light: #e8c876; --gold-pale: rgba(201,168,76,0.12);
+    --cream: #f7f4ee; --cream-dark: #ede9e0; --white: #ffffff;
+    --text-body: #5a6478; --text-light: rgba(247,244,238,0.72);
+    --danger: #d94f4f; --success: #3d9970; --ease: cubic-bezier(0.4,0,0.2,1);
+  }
+  * { box-sizing: border-box; }
+  body, .user-dash * { font-family: 'Lato', sans-serif; }
+  .user-dash h1, .user-dash h2, .user-dash h3,
+  .user-dash h4, .user-dash h5 { font-family: 'Cinzel', serif; }
+
+  /* Sidebar nav button */
+  .ud-nav-btn {
+    width:100%; display:flex; align-items:center; gap:0.75rem;
+    padding:0.75rem 1rem; border-radius:8px; border:none;
+    background:transparent; color:rgba(247,244,238,0.7);
+    cursor:pointer; transition:all 0.2s ease;
+    font-size:0.9rem; font-weight:400;
+    font-family:'Lato',sans-serif; text-align:left; white-space:nowrap;
+  }
+  .ud-nav-btn:hover { background:rgba(201,168,76,0.15); color:var(--cream); }
+  .ud-nav-btn.active {
+    background:var(--gold); color:var(--navy); font-weight:600;
+  }
+  .ud-nav-btn .nav-icon { font-size:1.2rem; flex-shrink:0; }
+
+  /* Cards */
+  .ud-card {
+    background:var(--white); border-radius:12px;
+    box-shadow:0 2px 8px rgba(20,33,61,0.08);
+    transition:all 0.3s ease;
+  }
+  .ud-card:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(20,33,61,0.13); }
+
+  /* Stat card border accent */
+  .ud-stat-card { border-left:4px solid var(--navy); }
+
+  /* Table rows */
+  .ud-tr:hover { background:var(--cream); }
+
+  /* Input fields */
+  .ud-input {
+    width:100%; padding:0.7rem 1rem;
+    border:1.5px solid rgba(20,33,61,0.14);
+    border-radius:8px; background:var(--white);
+    font-family:'Lato',sans-serif; font-size:0.875rem;
+    color:var(--navy); outline:none;
+    transition:border-color 0.2s, box-shadow 0.2s;
+  }
+  .ud-input:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,168,76,0.15); }
+  .ud-input:disabled { background:var(--cream); color:var(--text-body); cursor:not-allowed; }
+
+  /* Badge */
+  .ud-badge {
+    display:inline-block; padding:0.3rem 0.75rem;
+    border-radius:20px; font-size:0.72rem; font-weight:600;
+    white-space:nowrap;
+  }
+
+  /* Section header */
+  .ud-section-header {
+    padding:1.1rem 1.5rem; border-bottom:1px solid var(--gold-pale);
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:0.5rem;
+  }
+
+  /* Mobile backdrop */
+  .ud-backdrop {
+    position:fixed; inset:0; background:rgba(20,33,61,0.5);
+    z-index:199;
+  }
+
+  /* Sidebar overlay on mobile */
+  @media(max-width:768px) {
+    .ud-sidebar {
+      position:fixed !important; top:0; left:0;
+      height:100vh; z-index:200;
+    }
+  }
+
+  /* Pulse animation */
+  @keyframes ud-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .ud-pulse { animation:ud-pulse 1.5s ease-in-out infinite; }
+
+  /* Fade up */
+  @keyframes ud-fadeup { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .ud-fadeup { animation:ud-fadeup 0.45s var(--ease) both; }
+`;
+
 /* ─── Context ────────────────────────────────────────────────────────────────── */
 const DashboardCtx = createContext(null);
 const useDash = () => useContext(DashboardCtx);
@@ -23,11 +116,11 @@ const upcomingEvents = [
   { id: 4, name: "Worship Team Rehearsal",  date: "2025-04-25", time: "5:30 PM",  location: "Music Room",      category: "Ministry"   },
 ];
 const recentActivities = [
-  { id: 1, action: "Tithe payment submitted",    amount: 12000, date: "2025-04-06", icon: "payment" },
-  { id: 2, action: "Attended Sunday Service",                   date: "2025-04-06", icon: "event"   },
-  { id: 3, action: "Donation to Building Fund",  amount:  5000, date: "2025-03-30", icon: "payment" },
-  { id: 4, action: "Attended Youth Fellowship",                 date: "2025-03-28", icon: "event"   },
-  { id: 5, action: "Profile updated",                           date: "2025-03-25", icon: "profile" },
+  { id: 1, action: "Tithe payment submitted",    amount: 12000, date: "2025-04-06", icon: "💰" },
+  { id: 2, action: "Attended Sunday Service",                   date: "2025-04-06", icon: "⛪" },
+  { id: 3, action: "Donation to Building Fund",  amount:  5000, date: "2025-03-30", icon: "💰" },
+  { id: 4, action: "Attended Youth Fellowship",                 date: "2025-03-28", icon: "👥" },
+  { id: 5, action: "Profile updated",                           date: "2025-03-25", icon: "👤" },
 ];
 const notifData = [
   { id: 1, message: "Your April tithe has been verified.",          time: "2 hours ago", read: false },
@@ -40,232 +133,173 @@ const fmtDate = (d) => new Date(d).toLocaleDateString("en-KE", { day: "numeric",
 const fmtCur  = (n) => `KES ${n.toLocaleString()}`;
 const getInitials = (f, l) => `${(f || "").charAt(0)}${(l || "").charAt(0)}`.toUpperCase() || "U";
 
-/* ─── Skeleton Components ────────────────────────────────────────────────────── */
-function SkeletonCard() {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-      <div className="flex items-start justify-between mb-5">
-        <div className="w-12 h-12 rounded-xl bg-gray-200 animate-pulse" />
-      </div>
-      <div className="h-8 w-20 bg-gray-200 rounded animate-pulse mb-3" />
-      <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-2" />
-      <div className="h-3 w-24 bg-gray-100 rounded animate-pulse" />
-    </div>
-  );
-}
+/* ─── Nav Items ──────────────────────────────────────────────────────────────── */
+const NAV = [
+  { id: "dashboard",     label: "Dashboard",      icon: "📊" },
+  { id: "profile",       label: "My Profile",     icon: "👤" },
+  { id: "contributions", label: "Contributions",  icon: "💰" },
+  { id: "events",        label: "Events",         icon: "📅" },
+];
 
-function SkeletonSummaryCards() {
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
-    </div>
-  );
-}
+const SECTION_TITLES = {
+  dashboard:     "Dashboard",
+  profile:       "My Profile",
+  contributions: "My Contributions",
+  events:        "Upcoming Events",
+};
 
-function SkeletonSection() {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-100">
-        <div className="h-5 w-40 bg-gray-200 rounded animate-pulse mb-2" />
-        <div className="h-3 w-32 bg-gray-100 rounded animate-pulse" />
-      </div>
-      <div className="space-y-0">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="px-6 py-4 border-b border-gray-50 last:border-b-0">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-gray-200 animate-pulse flex-shrink-0" />
-              <div className="flex-1">
-                <div className="h-4 w-48 bg-gray-200 rounded animate-pulse mb-2" />
-                <div className="h-3 w-32 bg-gray-100 rounded animate-pulse" />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SkeletonTable() {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-100">
-        <div className="h-5 w-40 bg-gray-200 rounded animate-pulse mb-2" />
-        <div className="h-3 w-32 bg-gray-100 rounded animate-pulse" />
-      </div>
-      <div className="hidden sm:block">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="px-6 py-3.5 border-b border-gray-50 last:border-b-0 flex items-center gap-4">
-            <div className="h-6 w-24 bg-gray-200 rounded animate-pulse" />
-            <div className="h-6 w-32 bg-gray-200 rounded animate-pulse" />
-            <div className="h-6 w-24 bg-gray-200 rounded animate-pulse flex-1" />
-            <div className="h-6 w-20 bg-gray-100 rounded animate-pulse" />
-          </div>
-        ))}
-      </div>
-      <div className="sm:hidden space-y-3">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="px-4 py-3">
-            <div className="h-5 w-20 bg-gray-200 rounded animate-pulse mb-2" />
-            <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-2" />
-            <div className="flex justify-between">
-              <div className="h-3 w-24 bg-gray-100 rounded animate-pulse" />
-              <div className="h-3 w-20 bg-gray-100 rounded animate-pulse" />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SkeletonDashboardOverview() {
-  return (
-    <div className="space-y-6">
-      <div className="rounded-3xl px-6 py-8 bg-gradient-to-br from-gray-200 to-gray-100 animate-pulse h-40" />
-      <SkeletonSummaryCards />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SkeletonSection />
-        <SkeletonSection />
-      </div>
-      <SkeletonTable />
-    </div>
-  );
-}
+/* ─── Cross Icon ─────────────────────────────────────────────────────────────── */
+const CrossIcon = ({ size = 18 }) => (
+  <svg viewBox="0 0 20 20" style={{ width: size, height: size, fill: "var(--navy)" }} aria-hidden="true">
+    <rect x="8.5" y="1"   width="3"  height="18" rx="1" />
+    <rect x="2"   y="6.5" width="16" height="3"  rx="1" />
+  </svg>
+);
 
 /* ─── Avatar ─────────────────────────────────────────────────────────────────── */
-function Avatar({ firstName, lastName, size = "md" }) {
-  const sizes = {
-    sm: "w-8 h-8 text-xs rounded-full",
-    md: "w-9 h-9 text-sm rounded-full",
-    lg: "w-20 h-20 text-2xl rounded-2xl shadow-lg",
-  };
+function Avatar({ firstName, lastName, size = 36 }) {
   return (
-    <div
-      className={`${sizes[size]} flex items-center justify-center flex-shrink-0 select-none font-bold`}
-      style={{ background: "linear-gradient(135deg, #c9a84c 0%, #e8c876 100%)", color: "#14213d" }}
-    >
+    <div style={{
+      width: size, height: size, borderRadius: size > 50 ? "12px" : "50%",
+      background: "linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%)",
+      color: "var(--navy)", display: "flex", alignItems: "center",
+      justifyContent: "center", fontWeight: 700,
+      fontSize: size > 50 ? "1.4rem" : "0.85rem",
+      flexShrink: 0, userSelect: "none",
+      fontFamily: "'Lato',sans-serif",
+    }}>
       {getInitials(firstName, lastName)}
     </div>
   );
 }
 
-/* ─── Cross Icon ─────────────────────────────────────────────────────────────── */
-const CrossIcon = ({ size = 16 }) => (
-  <svg viewBox="0 0 20 20" style={{ width: size, height: size }} aria-hidden="true">
-    <rect x="8.5" y="1"   width="3"  height="18" rx="1" fill="currentColor" />
-    <rect x="2"   y="6.5" width="16" height="3"  rx="1" fill="currentColor" />
-  </svg>
-);
-
-/* ─── Nav Items ──────────────────────────────────────────────────────────────── */
-const NAV = [
-  {
-    id: "dashboard", label: "Dashboard",
-    icon: <><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></>,
-  },
-  {
-    id: "profile", label: "Profile",
-    icon: <><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></>,
-  },
-  {
-    id: "contributions", label: "Contributions",
-    icon: <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>,
-  },
-  {
-    id: "events", label: "Events",
-    icon: <><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
-  },
-];
+/* ─── Skeleton ───────────────────────────────────────────────────────────────── */
+function Skel({ w = "100%", h = 18, r = 6 }) {
+  return (
+    <div className="ud-pulse" style={{
+      width: w, height: h, borderRadius: r,
+      background: "rgba(20,33,61,0.08)",
+    }} />
+  );
+}
+function SkeletonOverview() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <div className="ud-pulse" style={{ height: 130, borderRadius: 16, background: "rgba(20,33,61,0.08)" }} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "1rem" }}>
+        {[1,2,3,4].map(i => (
+          <div key={i} className="ud-card" style={{ padding: "1.25rem" }}>
+            <Skel w={40} h={40} r={8} /><br/>
+            <Skel w="60%" h={28} /><br/>
+            <Skel w="80%" h={14} />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+        <div className="ud-card" style={{ padding: "1.25rem", display:"flex", flexDirection:"column", gap:"0.75rem" }}>
+          <Skel w="50%" h={16} />
+          {[1,2,3].map(i => <Skel key={i} h={48} r={8} />)}
+        </div>
+        <div className="ud-card" style={{ padding: "1.25rem", display:"flex", flexDirection:"column", gap:"0.75rem" }}>
+          <Skel w="50%" h={16} />
+          {[1,2,3].map(i => <Skel key={i} h={48} r={8} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ─── Sidebar ────────────────────────────────────────────────────────────────── */
 function Sidebar() {
   const { section, setSection, sidebarOpen, setSidebarOpen } = useDash();
   const { logout } = useAuth();
-  const navigate   = useNavigate();
+  const navigate = useNavigate();
 
   const nav = (id) => { setSection(id); setSidebarOpen(false); };
 
   return (
     <>
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="ud-backdrop" style={{ display: "block" }}
+          onClick={() => setSidebarOpen(false)} />
       )}
-      <aside
-        className={`fixed top-0 left-0 z-30 h-screen w-64 flex flex-col text-white transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:z-auto overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
-        style={{ background: "linear-gradient(180deg,#0f1724 0%,#14213d 100%)" }}
+      <div
+        className="ud-sidebar"
+        style={{
+          width: "16rem", minWidth: "16rem", height: "100vh",
+          background: "linear-gradient(160deg,var(--navy) 0%,var(--navy-mid) 55%,var(--navy-light) 100%)",
+          display: "flex", flexDirection: "column",
+          boxShadow: "0 4px 20px rgba(20,33,61,0.15)",
+          flexShrink: 0, overflow: "hidden",
+          transition: "transform 0.3s ease",
+          // On mobile handled by CSS class
+        }}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-5 border-b border-white/10 flex-shrink-0">
-          <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: "linear-gradient(135deg,#c9a84c 0%,#e8c876 100%)", color: "#14213d" }}
-          >
-            <CrossIcon size={14} />
+        <div style={{
+          padding: "1rem 1.25rem",
+          borderBottom: "1px solid var(--gold-pale)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: "0.75rem",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+              background: "linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%)",
+              display: "grid", placeItems: "center",
+              boxShadow: "0 4px 12px rgba(201,168,76,0.3)",
+            }}>
+              <CrossIcon size={16} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontFamily: "'Cinzel',serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em", color: "var(--cream)" }}>
+                Westlands
+              </p>
+              <p style={{ margin: 0, fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--gold)" }}>
+                P.A.G Church
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold tracking-wide truncate" style={{ fontFamily: "'Cinzel',serif" }}>Westlands</p>
-            <p className="text-[10px] tracking-widest uppercase" style={{ color: "#c9a84c" }}>P.A.G Church</p>
-          </div>
-          <button
-            className="ml-auto lg:hidden text-white/50 hover:text-white transition-colors flex-shrink-0"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Close sidebar"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
+          <button onClick={() => setSidebarOpen(false)}
+            style={{ background:"none", border:"none", color:"rgba(247,244,238,0.5)", cursor:"pointer", fontSize:"1.2rem", padding:"0.25rem", borderRadius:"4px" }}
+            aria-label="Close sidebar">✕</button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
-          <p className="px-3 pb-3 text-[10px] uppercase tracking-widest text-white/30 font-medium">Menu</p>
-          {NAV.map((item) => {
-            const active = section === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => nav(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 text-left ${
-                  active ? "text-white shadow-lg" : "text-white/60 hover:text-white hover:bg-white/5"
-                }`}
-                style={active ? { background: "linear-gradient(135deg,#c9a84c22 0%,#c9a84c11 100%)", borderLeft: "2px solid #c9a84c" } : {}}
-              >
-                <svg
-                  className="flex-shrink-0"
-                  style={{ width: 16, height: 16 }}
-                  fill="none"
-                  stroke={active ? "#c9a84c" : "currentColor"}
-                  strokeWidth={1.8}
-                  viewBox="0 0 24 24"
-                >
-                  {item.icon}
-                </svg>
-                <span className="truncate">{item.label}</span>
-              </button>
-            );
-          })}
+        <nav style={{ flex: 1, padding: "1rem", display: "flex", flexDirection: "column", gap: "0.35rem", overflowY: "auto" }}>
+          <p style={{ margin: "0 0 0.5rem 0", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(247,244,238,0.3)", fontWeight: 600, paddingLeft: "0.5rem" }}>
+            Menu
+          </p>
+          {NAV.map(item => (
+            <button
+              key={item.id}
+              onClick={() => nav(item.id)}
+              className={`ud-nav-btn${section === item.id ? " active" : ""}`}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
         </nav>
 
         {/* Logout */}
-        <div className="px-3 py-4 border-t border-white/10 flex-shrink-0">
+        <div style={{ borderTop: "1px solid var(--gold-pale)", padding: "1rem" }}>
           <button
             onClick={() => { logout(); navigate("/login", { replace: true }); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-all"
+            style={{
+              width: "100%", background: "var(--danger)", border: "none",
+              color: "var(--cream)", fontWeight: 600, padding: "0.6rem 1rem",
+              borderRadius: 8, cursor: "pointer", transition: "all 0.2s ease",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+              fontSize: "0.9rem", fontFamily: "'Lato',sans-serif",
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "0.88"}
+            onMouseLeave={e => e.currentTarget.style.opacity = "1"}
           >
-            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-            <span className="truncate">Logout</span>
+            🚪 Logout
           </button>
         </div>
-      </aside>
+      </div>
     </>
   );
 }
@@ -280,303 +314,267 @@ function NotifPanel({ onClose }) {
   }, [onClose]);
 
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-2 w-80 max-h-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden flex flex-col">
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-        <h3 className="text-sm font-semibold text-gray-800">Notifications</h3>
-        <span className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 whitespace-nowrap" style={{ background: "#c9a84c22", color: "#c9a84c" }}>
+    <div ref={ref} style={{
+      position: "absolute", right: 0, top: "calc(100% + 8px)",
+      width: 320, maxHeight: 380, background: "var(--white)",
+      borderRadius: 12, boxShadow: "0 8px 30px rgba(20,33,61,0.15)",
+      border: "1px solid var(--gold-pale)", zIndex: 50,
+      display: "flex", flexDirection: "column", overflow: "hidden",
+    }}>
+      <div style={{
+        padding: "0.85rem 1rem", borderBottom: "1px solid var(--gold-pale)",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <h3 style={{ margin: 0, fontSize: "0.9rem", fontWeight: 700, color: "var(--navy)", fontFamily: "'Cinzel',serif" }}>
+          Notifications
+        </h3>
+        <span style={{
+          fontSize: "0.68rem", padding: "0.2rem 0.6rem", borderRadius: 20,
+          background: "var(--gold-pale)", color: "var(--navy)", fontWeight: 600,
+        }}>
           {notifData.filter(n => !n.read).length} new
         </span>
       </div>
-      <ul className="divide-y divide-gray-50 overflow-y-auto flex-1">
+      <ul style={{ listStyle: "none", margin: 0, padding: 0, overflowY: "auto", flex: 1 }}>
         {notifData.map(n => (
-          <li key={n.id} className={`px-4 py-3 flex gap-3 ${!n.read ? "bg-amber-50/40" : ""}`}>
-            <div className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ background: "#c9a84c" }} />
-            <div className="min-w-0">
-              <p className="text-sm text-gray-700 break-words">{n.message}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{n.time}</p>
+          <li key={n.id} style={{
+            padding: "0.85rem 1rem", display: "flex", gap: "0.75rem",
+            borderBottom: "1px solid var(--gold-pale)",
+            background: !n.read ? "rgba(201,168,76,0.05)" : "transparent",
+          }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--gold)", flexShrink: 0, marginTop: 5 }} />
+            <div>
+              <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--navy)", lineHeight: 1.5 }}>{n.message}</p>
+              <p style={{ margin: "0.2rem 0 0", fontSize: "0.7rem", color: "var(--text-body)" }}>{n.time}</p>
             </div>
           </li>
         ))}
       </ul>
-      <div className="px-4 py-2.5 border-t border-gray-100 text-center flex-shrink-0">
-        <button className="text-xs font-medium" style={{ color: "#c9a84c" }}>Mark all as read</button>
+      <div style={{ padding: "0.75rem 1rem", textAlign: "center", borderTop: "1px solid var(--gold-pale)" }}>
+        <button style={{ background: "none", border: "none", color: "var(--gold)", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", fontFamily: "'Lato',sans-serif" }}>
+          Mark all as read
+        </button>
       </div>
     </div>
   );
 }
 
-/* ─── User Menu Dropdown ─────────────────────────────────────────────────────── */
-function UserMenu({ user }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  const { logout } = useAuth();
-  const { setSection } = useDash();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!open) return;
-    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, [open]);
-
-  const firstName = user?.firstName || "User";
-  const lastName  = user?.lastName  || "";
-  const email     = user?.email     || "";
-  const role      = user?.role      || "Member";
-
-  const handleLogout = () => {
-    setOpen(false);
-    logout();
-    navigate("/login", { replace: true });
-  };
-
-  const goTo = (section) => { setSection(section); setOpen(false); };
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-colors duration-150"
-        aria-label="User menu"
-        aria-expanded={open}
-        aria-haspopup="true"
-      >
-        <Avatar firstName={firstName} lastName={lastName} size="sm" />
-        <div className="hidden sm:block text-left">
-          <p className="text-sm font-semibold text-gray-800 leading-tight truncate">{firstName}</p>
-          <p className="text-xs text-gray-400 truncate">{role}</p>
-        </div>
-        <svg
-          className={`w-4 h-4 text-gray-400 transition-transform duration-200 flex-shrink-0 ${open ? "rotate-180" : ""}`}
-          fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
-        >
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-          <div className="px-4 py-4 border-b border-gray-100 flex items-center gap-3">
-            <Avatar firstName={firstName} lastName={lastName} size="md" />
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-800 truncate">{firstName} {lastName}</p>
-              <p className="text-xs text-gray-400 truncate">{email}</p>
-              <span
-                className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide"
-                style={{ background: "#c9a84c22", color: "#c9a84c" }}
-              >
-                {role}
-              </span>
-            </div>
-          </div>
-          <div className="py-1">
-            <button
-              onClick={() => goTo("profile")}
-              className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2.5"
-            >
-              <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-              </svg>
-              <span className="truncate">View Profile</span>
-            </button>
-            <button
-              onClick={() => goTo("contributions")}
-              className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2.5"
-            >
-              <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-              </svg>
-              <span className="truncate">My Contributions</span>
-            </button>
-          </div>
-          <div className="border-t border-gray-100 py-1">
-            <button
-              onClick={handleLogout}
-              className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2.5"
-            >
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-              <span className="truncate">Sign Out</span>
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ─── Navbar ─────────────────────────────────────────────────────────────────── */
+/* ─── Navbar / Header ────────────────────────────────────────────────────────── */
 function Navbar() {
   const { section, setSidebarOpen } = useDash();
   const { user } = useAuth();
   const [showNotif, setShowNotif] = useState(false);
   const unread = notifData.filter(n => !n.read).length;
 
-  const labels = {
-    dashboard:     "Dashboard",
-    profile:       "My Profile",
-    contributions: "My Contributions",
-    events:        "Events",
-  };
+  const firstName = user?.firstName || "User";
+  const lastName  = user?.lastName  || "";
+  const role      = user?.role      || "Member";
 
   return (
-    <header
-      className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 md:px-6 py-3 flex items-center gap-4"
-      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}
-    >
-      {/* Hamburger */}
-      <button
-        className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors flex-shrink-0"
-        onClick={() => setSidebarOpen(true)}
-        aria-label="Open menu"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <line x1="3" y1="6" x2="21" y2="6"/>
-          <line x1="3" y1="12" x2="21" y2="12"/>
-          <line x1="3" y1="18" x2="21" y2="18"/>
-        </svg>
-      </button>
-
-      {/* Title */}
-      <div className="flex-1 min-w-0">
-        <h1 className="text-base font-semibold text-gray-800 truncate">{labels[section] || "Dashboard"}</h1>
-        <p className="text-xs text-gray-400 hidden sm:block">
-          {new Date().toLocaleDateString("en-KE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-        </p>
+    <header style={{
+      background: "var(--white)", borderBottom: "2px solid var(--gold-pale)",
+      padding: "1rem 1.5rem",
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      boxShadow: "0 2px 8px rgba(20,33,61,0.06)", gap: "1rem", flexShrink: 0,
+    }}>
+      {/* Left: hamburger + title */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0 }}>
+        <button
+          onClick={() => setSidebarOpen(v => !v)}
+          style={{ background: "none", border: "none", fontSize: "1.4rem", cursor: "pointer", color: "var(--navy)", padding: "0.25rem 0.5rem", borderRadius: 6, flexShrink: 0, lineHeight: 1 }}
+          aria-label="Toggle menu"
+        >☰</button>
+        <div style={{ minWidth: 0 }}>
+          <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "var(--navy)", fontFamily: "'Cinzel',serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {SECTION_TITLES[section] || "Dashboard"}
+          </h2>
+          <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--text-body)" }}>
+            {new Date().toLocaleDateString("en-KE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          </p>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        {/* Notifications */}
-        <div className="relative">
+      {/* Right: notifications + user */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
+        {/* Notification bell */}
+        <div style={{ position: "relative" }}>
           <button
             onClick={() => setShowNotif(v => !v)}
-            className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors flex-shrink-0"
-            aria-label={`Notifications${unread > 0 ? `, ${unread} unread` : ""}`}
+            style={{
+              position: "relative", background: "none", border: "none",
+              cursor: "pointer", padding: "0.5rem", borderRadius: 8,
+              color: "var(--text-body)", fontSize: "1.25rem",
+              transition: "background 0.2s",
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = "var(--cream)"}
+            onMouseLeave={e => e.currentTarget.style.background = "none"}
+            aria-label="Notifications"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
+            🔔
             {unread > 0 && (
-              <span
-                className="absolute top-1 right-1 w-2 h-2 rounded-full animate-pulse"
-                style={{ background: "#c9a84c" }}
-              />
+              <span style={{
+                position: "absolute", top: 6, right: 6,
+                width: 8, height: 8, borderRadius: "50%",
+                background: "var(--gold)", border: "2px solid var(--white)",
+              }} />
             )}
           </button>
           {showNotif && <NotifPanel onClose={() => setShowNotif(false)} />}
         </div>
 
-        <div className="w-px h-6 bg-gray-200 hidden sm:block" />
+        <div style={{ width: 1, height: 24, background: "var(--gold-pale)" }} />
 
-        {/* User Menu */}
-        <UserMenu user={user} />
+        {/* User chip */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <Avatar firstName={firstName} lastName={lastName} size={34} />
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--navy)", lineHeight: 1.2 }}>{firstName}</span>
+            <span style={{ fontSize: "0.68rem", color: "var(--text-body)" }}>{role}</span>
+          </div>
+        </div>
       </div>
     </header>
   );
 }
 
-/* ─── Summary Cards ──────────────────────────────────────────────────────────── */
-function SummaryCards() {
-  const total = contributions.reduce((s, c) => s + c.amount, 0);
+/* ─── Dashboard Overview ─────────────────────────────────────────────────────── */
+function DashboardOverview() {
+  const { user } = useAuth();
+  const { setSection } = useDash();
+  const firstName = user?.firstName || "Member";
+  const lastName  = user?.lastName  || "";
+  const total     = contributions.reduce((s, c) => s + c.amount, 0);
 
-  const cards = [
-    {
-      label: "Total Contributions",
-      value: fmtCur(total),
-      sub: "+12% this month",
-      subPositive: true,
-      color: "gold",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-          <line x1="12" y1="1" x2="12" y2="23"/>
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-        </svg>
-      ),
-    },
-    {
-      label: "Events Attended",
-      value: "23",
-      sub: "This year",
-      color: "blue",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-      ),
-    },
-    {
-      label: "Upcoming Events",
-      value: String(upcomingEvents.length),
-      sub: "Next 7 days",
-      color: "green",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-      ),
-    },
-    {
-      label: "Notifications",
-      value: String(notifData.filter(n => !n.read).length),
-      sub: "Unread",
-      color: "purple",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-      ),
-    },
+  const stats = [
+    { label: "Total Contributions", value: fmtCur(total), icon: "💰", border: "var(--gold)", sub: "+12% this month" },
+    { label: "Events Attended",     value: "23",          icon: "⛪", border: "var(--navy)", sub: "This year" },
+    { label: "Upcoming Events",     value: String(upcomingEvents.length), icon: "📅", border: "var(--success)", sub: "Next 7 days" },
+    { label: "Notifications",       value: String(notifData.filter(n => !n.read).length), icon: "🔔", border: "var(--danger)", sub: "Unread" },
   ];
 
-  const palettes = {
-    gold:   { iconColor: "#c9a84c", iconBg: "#c9a84c22", subColor: "#c9a84c"  },
-    blue:   { iconColor: "#3b82f6", iconBg: "#3b82f622", subColor: "#3b82f6"  },
-    green:  { iconColor: "#10b981", iconBg: "#10b98122", subColor: "#10b981"  },
-    purple: { iconColor: "#8b5cf6", iconBg: "#8b5cf622", subColor: "#8b5cf6"  },
-  };
-
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-      {cards.map(card => {
-        const p = palettes[card.color];
-        return (
-          <div
-            key={card.label}
-            className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-lg hover:border-gray-200 transition-all duration-300 hover:-translate-y-0.5 cursor-default"
-          >
-            <div className="flex items-start justify-between mb-4 sm:mb-5">
-              <div
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: p.iconBg, color: p.iconColor }}
-              >
-                {card.icon}
-              </div>
-              {card.subPositive && (
-                <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 whitespace-nowrap hidden sm:inline-flex">
-                  {card.sub}
-                </span>
-              )}
-            </div>
-            <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 leading-none mb-1 sm:mb-2 truncate">{card.value}</p>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1 line-clamp-2">{card.label}</p>
-            {!card.subPositive && (
-              <p className="text-xs font-semibold" style={{ color: p.subColor }}>{card.sub}</p>
-            )}
+    <div className="ud-fadeup" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {/* Welcome Banner */}
+      <div style={{
+        borderRadius: 16, padding: "1.75rem 2rem", position: "relative", overflow: "hidden",
+        background: "linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 55%,var(--navy-light) 100%)",
+      }}>
+        <div style={{ position:"absolute", top:-80, right:-80, width:220, height:220, borderRadius:"50%", background:"rgba(201,168,76,0.07)", pointerEvents:"none" }} />
+        <div style={{ position:"relative", zIndex:1, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
+          <div>
+            <p style={{ margin:"0 0 0.4rem", fontSize:"0.65rem", fontWeight:600, textTransform:"uppercase", letterSpacing:"0.2em", color:"var(--gold)" }}>
+              Welcome Back
+            </p>
+            <h2 style={{ margin:"0 0 0.3rem", fontFamily:"'Cinzel',serif", fontSize:"clamp(1.4rem,3vw,2rem)", fontWeight:700, color:"var(--cream)" }}>
+              {firstName} {lastName} 👋
+            </h2>
+            <p style={{ margin:0, fontSize:"0.82rem", color:"var(--text-light)" }}>
+              {user?.department || "Westlands P.A.G"} · {user?.role || "Member"}
+            </p>
           </div>
-        );
-      })}
+          <div style={{
+            padding:"0.9rem 1.4rem", borderRadius:10, textAlign:"center",
+            background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.12)",
+          }}>
+            <p style={{ margin:"0 0 0.2rem", fontSize:"0.65rem", textTransform:"uppercase", letterSpacing:"0.1em", color:"rgba(247,244,238,0.5)" }}>Member Since</p>
+            <p style={{ margin:0, fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"1rem", color:"var(--gold)" }}>
+              {user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-KE",{month:"short",year:"numeric"}) : "Apr 2026"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stat Cards */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:"1rem" }}>
+        {stats.map((s, i) => (
+          <div key={i} className="ud-card ud-stat-card" style={{ borderLeftColor: s.border, padding:"1.25rem" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"0.75rem" }}>
+              <p style={{ margin:0, fontSize:"0.7rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.07em", color:"var(--text-body)" }}>{s.label}</p>
+              <span style={{ fontSize:"1.25rem" }}>{s.icon}</span>
+            </div>
+            <p style={{ margin:"0 0 0.3rem", fontSize:"1.6rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif" }}>{s.value}</p>
+            <p style={{ margin:0, fontSize:"0.72rem", color:"var(--text-body)" }}>{s.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Two-column: Activities + Events preview */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:"1.5rem" }}>
+        {/* Recent Activity */}
+        <div className="ud-card">
+          <div className="ud-section-header">
+            <h3 style={{ margin:0, fontSize:"0.9rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif" }}>Recent Activity</h3>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column" }}>
+            {recentActivities.slice(0,4).map(a => (
+              <div key={a.id} style={{
+                padding:"0.85rem 1.25rem", display:"flex", alignItems:"center", gap:"0.85rem",
+                borderBottom:"1px solid var(--gold-pale)",
+                transition:"background 0.2s",
+              }}
+                onMouseEnter={e=>e.currentTarget.style.background="var(--cream)"}
+                onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+              >
+                <div style={{
+                  width:36, height:36, borderRadius:8, flexShrink:0,
+                  background:"var(--gold-pale)", display:"grid", placeItems:"center", fontSize:"1.1rem",
+                }}>{a.icon}</div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <p style={{ margin:0, fontSize:"0.82rem", fontWeight:600, color:"var(--navy)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{a.action}</p>
+                  {a.amount && <p style={{ margin:"0.1rem 0 0", fontSize:"0.72rem", fontWeight:700, color:"var(--gold)" }}>{fmtCur(a.amount)}</p>}
+                </div>
+                <span style={{ fontSize:"0.7rem", color:"var(--text-body)", whiteSpace:"nowrap", flexShrink:0 }}>{fmtDate(a.date)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Upcoming Events preview */}
+        <div className="ud-card">
+          <div className="ud-section-header">
+            <h3 style={{ margin:0, fontSize:"0.9rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif" }}>Upcoming Events</h3>
+            <button onClick={() => setSection("events")} style={{
+              background:"var(--gold-pale)", border:"none", color:"var(--navy)",
+              padding:"0.3rem 0.75rem", borderRadius:20, fontSize:"0.72rem",
+              fontWeight:600, cursor:"pointer", fontFamily:"'Lato',sans-serif",
+              transition:"all 0.2s",
+            }}
+              onMouseEnter={e=>{e.currentTarget.style.background="var(--gold)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="var(--gold-pale)";}}
+            >View all</button>
+          </div>
+          <div>
+            {upcomingEvents.slice(0,3).map(ev => {
+              const d = new Date(ev.date);
+              return (
+                <div key={ev.id} style={{
+                  padding:"0.85rem 1.25rem", display:"flex", alignItems:"center", gap:"0.85rem",
+                  borderBottom:"1px solid var(--gold-pale)", transition:"background 0.2s",
+                }}
+                  onMouseEnter={e=>e.currentTarget.style.background="var(--cream)"}
+                  onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+                >
+                  <div style={{
+                    width:40, textAlign:"center", background:"var(--cream)",
+                    borderRadius:8, padding:"0.35rem 0.4rem", border:"1px solid var(--gold-pale)", flexShrink:0,
+                  }}>
+                    <p style={{ margin:0, fontSize:"0.6rem", color:"var(--text-body)", textTransform:"uppercase" }}>{d.toLocaleDateString("en-KE",{weekday:"short"})}</p>
+                    <p style={{ margin:0, fontSize:"1.1rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif" }}>{d.getDate()}</p>
+                    <p style={{ margin:0, fontSize:"0.6rem", color:"var(--text-body)", textTransform:"uppercase" }}>{d.toLocaleDateString("en-KE",{month:"short"})}</p>
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ margin:"0 0 0.2rem", fontSize:"0.82rem", fontWeight:600, color:"var(--navy)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{ev.name}</p>
+                    <p style={{ margin:0, fontSize:"0.7rem", color:"var(--text-body)" }}>🕐 {ev.time} · 📍 {ev.location}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Contributions preview */}
+      <ContributionsSection limit={4} />
     </div>
   );
 }
@@ -599,88 +597,88 @@ function ProfileSection() {
     : "—";
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden w-full">
-      <div className="h-24" style={{ background: "linear-gradient(135deg,#0f1724 0%,#1e3160 100%)" }} />
-      <div className="px-4 sm:px-6 pb-6">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-10 mb-5">
-          <Avatar firstName={firstName} lastName={lastName} size="lg" />
-          <button
-            onClick={() => setEditing(e => !e)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all border w-fit"
-            style={
-              editing
-                ? { background: "linear-gradient(135deg,#c9a84c 0%,#e8c876 100%)", color: "#14213d", borderColor: "transparent" }
-                : { borderColor: "#e5e7eb", color: "#374151" }
-            }
-          >
-            {editing ? (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                Save
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Edit Profile
-              </>
-            )}
-          </button>
-        </div>
+    <div className="ud-fadeup" style={{ display:"flex", flexDirection:"column", gap:"1.5rem" }}>
+      <div className="ud-card" style={{ overflow:"hidden" }}>
+        {/* Banner */}
+        <div style={{ height:100, background:"linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 55%,var(--navy-light) 100%)" }} />
+        <div style={{ padding:"0 1.5rem 1.75rem" }}>
+          <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginTop:-30, marginBottom:"1rem", flexWrap:"wrap", gap:"0.75rem" }}>
+            <div style={{
+              width:70, height:70, borderRadius:12, flexShrink:0,
+              background:"linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%)",
+              color:"var(--navy)", display:"flex", alignItems:"center", justifyContent:"center",
+              fontWeight:700, fontSize:"1.5rem", boxShadow:"0 4px 16px rgba(201,168,76,0.35)",
+              fontFamily:"'Lato',sans-serif",
+            }}>
+              {getInitials(firstName, lastName)}
+            </div>
+            <button
+              onClick={() => setEditing(e => !e)}
+              style={{
+                padding:"0.6rem 1.2rem", borderRadius:8, border:"none", cursor:"pointer",
+                background: editing ? "linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%)" : "var(--cream-dark)",
+                color:"var(--navy)", fontWeight:600, fontSize:"0.85rem",
+                fontFamily:"'Lato',sans-serif", transition:"all 0.2s",
+                display:"flex", alignItems:"center", gap:"0.4rem",
+              }}
+              onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}
+              onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}
+            >
+              {editing ? "✓ Save Changes" : "✏️ Edit Profile"}
+            </button>
+          </div>
 
-        <h2 className="text-xl font-bold text-gray-900">{firstName} {lastName}</h2>
-        <p className="text-sm text-gray-500 mt-0.5">{user?.role || "Member"} · Member since {memberSince}</p>
+          <h2 style={{ margin:"0 0 0.2rem", fontFamily:"'Cinzel',serif", fontSize:"1.25rem", fontWeight:700, color:"var(--navy)" }}>
+            {firstName} {lastName}
+          </h2>
+          <p style={{ margin:"0 0 1.25rem", fontSize:"0.82rem", color:"var(--text-body)" }}>
+            {user?.role || "Member"} · Member since {memberSince}
+          </p>
 
-        <div className="mt-5">
           {editing ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[["First Name","firstName"],["Last Name","lastName"],["Phone","phone"],["Department","department"]].map(([label, key]) => (
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:"1rem" }}>
+              {[["First Name","firstName"],["Last Name","lastName"],["Phone","phone"],["Department","department"]].map(([label,key]) => (
                 <div key={key}>
-                  <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">{label}</label>
+                  <label style={{ display:"block", marginBottom:"0.35rem", fontSize:"0.7rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", color:"var(--navy)" }}>{label}</label>
                   <input
-                    type="text"
-                    value={form[key]}
-                    onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all"
+                    type="text" value={form[key]}
+                    onChange={e => setForm(f => ({...f,[key]:e.target.value}))}
+                    className="ud-input"
                   />
                 </div>
               ))}
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Email</label>
-                <input
-                  type="email"
-                  value={user?.email || ""}
-                  disabled
-                  className="w-full px-3 py-2 text-sm rounded-xl border border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed"
-                />
+              <div style={{ gridColumn:"1/-1" }}>
+                <label style={{ display:"block", marginBottom:"0.35rem", fontSize:"0.7rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", color:"var(--navy)" }}>Email</label>
+                <input type="email" value={user?.email || ""} disabled className="ud-input" />
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:"1.25rem" }}>
               {[
-                ["Email",        user?.email      || "—"],
-                ["Phone",        user?.phone      || "—"],
-                ["Department",   user?.department || "—"],
-                ["Member Since", memberSince],
-              ].map(([label, val]) => (
+                ["Email",       user?.email       || "—"],
+                ["Phone",       user?.phone       || "—"],
+                ["Department",  user?.department  || "—"],
+                ["Member Since",memberSince],
+              ].map(([label,val]) => (
                 <div key={label}>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">{label}</p>
-                  <p className="text-sm font-medium text-gray-800 break-words">{val}</p>
+                  <p style={{ margin:"0 0 0.2rem", fontSize:"0.68rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", color:"var(--text-body)" }}>{label}</p>
+                  <p style={{ margin:0, fontSize:"0.88rem", fontWeight:600, color:"var(--navy)" }}>{val}</p>
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
 /* ─── Contributions Section ──────────────────────────────────────────────────── */
 const TYPE_COLORS = {
-  Tithe:          "bg-amber-100 text-amber-700",
-  Offering:       "bg-blue-100 text-blue-700",
-  Donation:       "bg-emerald-100 text-emerald-700",
-  "Building Fund":"bg-violet-100 text-violet-700",
+  Tithe:          { bg:"rgba(201,168,76,0.12)",  color:"var(--navy)"   },
+  Offering:       { bg:"rgba(59,130,246,0.12)",  color:"#1d4ed8"       },
+  Donation:       { bg:"rgba(61,153,112,0.12)",  color:"var(--success)" },
+  "Building Fund":{ bg:"rgba(139,92,246,0.12)",  color:"#6d28d9"       },
 };
 
 function ContributionsSection({ limit }) {
@@ -688,264 +686,145 @@ function ContributionsSection({ limit }) {
   const total = contributions.reduce((s, c) => s + c.amount, 0);
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-2 sm:gap-3">
-        <div className="min-w-0">
-          <h2 className="text-base font-semibold text-gray-800">My Contributions</h2>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Total:{" "}
-            <span className="font-semibold" style={{ color: "#c9a84c" }}>{fmtCur(total)}</span>
-          </p>
+    <div className={limit ? "" : "ud-fadeup"} style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
+      <div className="ud-card" style={{ overflow:"hidden" }}>
+        <div className="ud-section-header">
+          <div>
+            <h3 style={{ margin:"0 0 0.15rem", fontSize:"0.9rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif" }}>My Contributions</h3>
+            <p style={{ margin:0, fontSize:"0.72rem", color:"var(--text-body)" }}>
+              Total: <strong style={{ color:"var(--gold)" }}>{fmtCur(total)}</strong>
+            </p>
+          </div>
+          <span className="ud-badge" style={{ background:"var(--cream)", color:"var(--text-body)" }}>{data.length} records</span>
         </div>
-        <span className="text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded-full flex-shrink-0">{data.length} records</span>
-      </div>
 
-      {/* Desktop table */}
-      <div className="hidden sm:block overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 text-left">
-              {["Type","Amount","Date","Status","Receipt"].map(h => (
-                <th key={h} className="px-4 sm:px-6 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {data.map(c => (
-              <tr key={c.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-4 sm:px-6 py-3.5">
-                  <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${TYPE_COLORS[c.type] || "bg-gray-100 text-gray-600"}`}>
-                    {c.type}
-                  </span>
-                </td>
-                <td className="px-4 sm:px-6 py-3.5 font-semibold text-gray-800">{fmtCur(c.amount)}</td>
-                <td className="px-4 sm:px-6 py-3.5 text-gray-500">{fmtDate(c.date)}</td>
-                <td className="px-4 sm:px-6 py-3.5">
-                  <span className="inline-flex items-center gap-1 text-xs text-emerald-700 font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{c.status}
-                  </span>
-                </td>
-                <td className="px-4 sm:px-6 py-3.5">
-                  <button className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-amber-600 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-amber-50">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                      <polyline points="7 10 12 15 17 10"/>
-                      <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    Receipt
-                  </button>
-                </td>
+        {/* Desktop table */}
+        <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
+          <table style={{ width:"100%", minWidth:520, borderCollapse:"collapse" }}>
+            <thead style={{ background:"var(--cream)" }}>
+              <tr>
+                {["Type","Amount","Date","Status","Receipt"].map(h => (
+                  <th key={h} style={{ padding:"0.75rem 1.25rem", textAlign:"left", fontSize:"0.68rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.07em", color:"var(--navy)", whiteSpace:"nowrap" }}>
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.map(c => {
+                const tc = TYPE_COLORS[c.type] || { bg:"var(--cream)", color:"var(--navy)" };
+                return (
+                  <tr key={c.id} className="ud-tr" style={{ borderBottom:"1px solid var(--gold-pale)", transition:"background 0.2s" }}>
+                    <td style={{ padding:"0.85rem 1.25rem" }}>
+                      <span className="ud-badge" style={{ background:tc.bg, color:tc.color }}>{c.type}</span>
+                    </td>
+                    <td style={{ padding:"0.85rem 1.25rem", fontWeight:700, color:"var(--navy)", fontSize:"0.88rem" }}>{fmtCur(c.amount)}</td>
+                    <td style={{ padding:"0.85rem 1.25rem", color:"var(--text-body)", fontSize:"0.82rem" }}>{fmtDate(c.date)}</td>
+                    <td style={{ padding:"0.85rem 1.25rem" }}>
+                      <span style={{ display:"inline-flex", alignItems:"center", gap:"0.35rem", fontSize:"0.75rem", fontWeight:600, color:"var(--success)" }}>
+                        <span style={{ width:6, height:6, borderRadius:"50%", background:"var(--success)", flexShrink:0 }} />
+                        {c.status}
+                      </span>
+                    </td>
+                    <td style={{ padding:"0.85rem 1.25rem" }}>
+                      <button style={{
+                        background:"none", border:"1px solid var(--gold-pale)", color:"var(--text-body)",
+                        padding:"0.3rem 0.7rem", borderRadius:6, cursor:"pointer", fontSize:"0.72rem",
+                        fontFamily:"'Lato',sans-serif", transition:"all 0.2s",
+                      }}
+                        onMouseEnter={e=>{e.currentTarget.style.borderColor="var(--gold)";e.currentTarget.style.color="var(--navy)";}}
+                        onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--gold-pale)";e.currentTarget.style.color="var(--text-body)";}}
+                      >
+                        ↓ Receipt
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      {/* Mobile list */}
-      <ul className="sm:hidden divide-y divide-gray-100">
-        {data.map(c => (
-          <li key={c.id} className="px-4 py-4">
-            <div className="flex items-start justify-between mb-2">
-              <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${TYPE_COLORS[c.type] || "bg-gray-100 text-gray-600"}`}>
-                {c.type}
-              </span>
-              <button className="text-gray-400 hover:text-amber-600 transition-colors p-1 flex-shrink-0">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-              </button>
-            </div>
-            <p className="text-lg font-bold text-gray-800">{fmtCur(c.amount)}</p>
-            <div className="flex justify-between mt-2">
-              <p className="text-xs text-gray-400">{fmtDate(c.date)}</p>
-              <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{c.status}
-              </span>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </section>
+    </div>
   );
 }
 
 /* ─── Events Section ─────────────────────────────────────────────────────────── */
-const CAT_STYLES = {
-  Worship:    "bg-amber-100 text-amber-700",
-  Fellowship: "bg-blue-100 text-blue-700",
-  Prayer:     "bg-violet-100 text-violet-700",
-  Ministry:   "bg-emerald-100 text-emerald-700",
+const CAT_COLORS = {
+  Worship:    { bg:"rgba(201,168,76,0.12)", color:"var(--navy)"   },
+  Fellowship: { bg:"rgba(59,130,246,0.12)", color:"#1d4ed8"       },
+  Prayer:     { bg:"rgba(139,92,246,0.12)", color:"#6d28d9"       },
+  Ministry:   { bg:"rgba(61,153,112,0.12)", color:"var(--success)" },
 };
 
 function EventsSection({ limit }) {
   const data = limit ? upcomingEvents.slice(0, limit) : upcomingEvents;
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
-        <h2 className="text-base font-semibold text-gray-800">Upcoming Events</h2>
-        <p className="text-xs text-gray-400 mt-0.5">{data.length} events coming up</p>
-      </div>
-      <ul className="divide-y divide-gray-50">
-        {data.map(ev => {
-          const d = new Date(ev.date);
-          return (
-            <li key={ev.id} className="px-4 sm:px-6 py-4 flex items-start gap-4 hover:bg-gray-50/50 transition-colors">
-              <div className="flex-shrink-0 w-12 text-center bg-gray-50 rounded-xl px-2 py-2 border border-gray-100">
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">
-                  {d.toLocaleDateString("en-KE", { weekday: "short" })}
-                </p>
-                <p className="text-xl font-bold text-gray-800 leading-tight">{d.getDate()}</p>
-                <p className="text-[10px] text-gray-400 uppercase">
-                  {d.toLocaleDateString("en-KE", { month: "short" })}
-                </p>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 mb-1.5">
-                  <h3 className="text-sm font-semibold text-gray-800 line-clamp-2">{ev.name}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 whitespace-nowrap ${CAT_STYLES[ev.category] || "bg-gray-100 text-gray-600"}`}>
-                    {ev.category}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-                  <span className="flex items-center gap-1 text-xs text-gray-400">
-                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                    </svg>
-                    <span className="truncate">{ev.time}</span>
-                  </span>
-                  <span className="flex items-center gap-1 text-xs text-gray-400">
-                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
-                    </svg>
-                    <span className="truncate">{ev.location}</span>
-                  </span>
-                </div>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
-
-/* ─── Recent Activities ──────────────────────────────────────────────────────── */
-const ACT_ICONS = {
-  payment: {
-    bg: "#c9a84c22", color: "#c9a84c",
-    el: <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
-  },
-  event: {
-    bg: "#3b82f622", color: "#3b82f6",
-    el: <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
-  },
-  profile: {
-    bg: "#8b5cf622", color: "#8b5cf6",
-    el: <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>,
-  },
-};
-
-function RecentActivities() {
-  return (
-    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
-        <h2 className="text-base font-semibold text-gray-800">Recent Activity</h2>
-      </div>
-      <ul className="divide-y divide-gray-50">
-        {recentActivities.map(a => {
-          const ic = ACT_ICONS[a.icon] || ACT_ICONS.event;
-          return (
-            <li key={a.id} className="px-4 sm:px-6 py-4 flex items-center gap-4">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: ic.bg, color: ic.color }}
-              >
-                {ic.el}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-800 truncate">{a.action}</p>
-                {a.amount && (
-                  <p className="text-xs font-semibold mt-0.5 truncate" style={{ color: "#c9a84c" }}>
-                    {fmtCur(a.amount)}
-                  </p>
-                )}
-              </div>
-              <time className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">{fmtDate(a.date)}</time>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
-
-/* ─── Dashboard Overview ─────────────────────────────────────────────────────── */
-function DashboardOverview() {
-  const { user } = useAuth();
-  const firstName = user?.firstName || "";
-  const lastName  = user?.lastName  || "";
-
-  return (
-    <div className="space-y-6">
-      {/* Welcome Banner */}
-      <div
-        className="rounded-3xl px-5 sm:px-6 py-7 sm:py-8 relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg,#0f1724 0%,#1e3a5f 50%,#2a4480 100%)" }}
-      >
-        <div className="absolute right-0 top-0 w-48 h-48 rounded-full pointer-events-none"
-          style={{ background: "rgba(255,255,255,0.04)", filter: "blur(40px)", transform: "translate(30%,-30%)" }} />
-        <div className="absolute left-0 bottom-0 w-40 h-40 rounded-full pointer-events-none"
-          style={{ background: "rgba(201,168,76,0.07)", filter: "blur(36px)", transform: "translate(-30%,30%)" }} />
-
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#e8c876" }}>
-              Welcome to Your Dashboard
-            </p>
-            <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight mb-2">
-              {firstName} {lastName} 👋
-            </h2>
-            <p className="text-white/60 text-sm mb-1">{user?.department || "Westlands P.A.G"} · {user?.role || "Member"}</p>
-            <p className="text-white/40 text-xs break-all">Email: {user?.email || "—"}</p>
-          </div>
-          <div
-            className="flex flex-col items-center justify-center sm:w-fit rounded-2xl px-5 py-4 border text-center flex-shrink-0"
-            style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.12)", backdropFilter: "blur(8px)" }}
-          >
-            <p className="text-white/50 text-xs uppercase tracking-wider mb-1">Member Since</p>
-            <p className="font-bold text-lg" style={{ color: "#e8c876" }}>
-              {user?.createdAt
-                ? new Date(user.createdAt).toLocaleDateString("en-KE", { month: "short", year: "numeric" })
-                : "Apr 2026"}
-            </p>
+    <div className="ud-fadeup" style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
+      <div className="ud-card" style={{ overflow:"hidden" }}>
+        <div className="ud-section-header">
+          <div>
+            <h3 style={{ margin:"0 0 0.15rem", fontSize:"0.9rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif" }}>Upcoming Events</h3>
+            <p style={{ margin:0, fontSize:"0.72rem", color:"var(--text-body)" }}>{data.length} events coming up</p>
           </div>
         </div>
+        <div>
+          {data.map(ev => {
+            const d = new Date(ev.date);
+            const cc = CAT_COLORS[ev.category] || { bg:"var(--cream)", color:"var(--navy)" };
+            return (
+              <div key={ev.id} style={{
+                padding:"1rem 1.25rem", display:"flex", alignItems:"center", gap:"1rem",
+                borderBottom:"1px solid var(--gold-pale)", transition:"background 0.2s",
+                flexWrap:"wrap",
+              }}
+                onMouseEnter={e=>e.currentTarget.style.background="var(--cream)"}
+                onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+              >
+                {/* Date badge */}
+                <div style={{
+                  width:48, textAlign:"center", background:"var(--cream)",
+                  borderRadius:8, padding:"0.4rem", border:"1px solid var(--gold-pale)", flexShrink:0,
+                }}>
+                  <p style={{ margin:0, fontSize:"0.6rem", color:"var(--text-body)", textTransform:"uppercase", fontWeight:600 }}>{d.toLocaleDateString("en-KE",{weekday:"short"})}</p>
+                  <p style={{ margin:0, fontSize:"1.35rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif", lineHeight:1.1 }}>{d.getDate()}</p>
+                  <p style={{ margin:0, fontSize:"0.6rem", color:"var(--text-body)", textTransform:"uppercase" }}>{d.toLocaleDateString("en-KE",{month:"short"})}</p>
+                </div>
+                <div style={{ flex:1, minWidth:150 }}>
+                  <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:"0.75rem", marginBottom:"0.4rem", flexWrap:"wrap" }}>
+                    <h4 style={{ margin:0, fontSize:"0.9rem", fontWeight:700, color:"var(--navy)" }}>{ev.name}</h4>
+                    <span className="ud-badge" style={{ background:cc.bg, color:cc.color }}>{ev.category}</span>
+                  </div>
+                  <p style={{ margin:0, fontSize:"0.75rem", color:"var(--text-body)" }}>🕐 {ev.time} &nbsp;·&nbsp; 📍 {ev.location}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
-
-      <SummaryCards />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RecentActivities />
-        <EventsSection limit={3} />
-      </div>
-
-      <ContributionsSection limit={4} />
     </div>
   );
 }
 
-/* ─── Root ───────────────────────────────────────────────────────────────────── */
+/* ─── Root Component ─────────────────────────────────────────────────────────── */
 export default function UserDashboard() {
-  // FIX: was "DashBoard" (capital B) — must match nav item id "dashboard"
-  const [section,       setSection]       = useState("dashboard");
-  const [sidebarOpen,   setSidebarOpen]   = useState(false);
-  const [isLoading,     setIsLoading]     = useState(true);
+  const [section,     setSection]     = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoading,   setIsLoading]   = useState(true);
   const { isAuthenticated, user, isInitialized } = useAuth();
   const navigate = useNavigate();
+
+  // Inject theme CSS once
+  useEffect(() => {
+    const id = "user-dash-theme-css";
+    if (!document.getElementById(id)) {
+      const tag = document.createElement("style");
+      tag.id = id;
+      tag.textContent = THEME_CSS;
+      document.head.appendChild(tag);
+    }
+  }, []);
 
   useEffect(() => {
     if (isInitialized && !isAuthenticated && !user) {
@@ -955,30 +834,32 @@ export default function UserDashboard() {
 
   useEffect(() => {
     setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setIsLoading(false), 400);
+    return () => clearTimeout(t);
   }, [section]);
+
+  // Handle responsive sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) setSidebarOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   if (!isInitialized) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gray-200 rounded-full animate-spin mx-auto mb-4" style={{ borderTopColor: "#c9a84c" }} />
-          <p className="text-gray-600">Loading dashboard...</p>
+      <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center", background:"var(--cream,#f7f4ee)" }}>
+        <div style={{ textAlign:"center" }}>
+          <div style={{ width:48, height:48, borderRadius:"50%", border:"3px solid rgba(201,168,76,0.3)", borderTopColor:"var(--gold,#c9a84c)", margin:"0 auto 1rem", animation:"spin 0.8s linear infinite" }} />
+          <p style={{ color:"var(--text-body,#5a6478)", fontFamily:"'Lato',sans-serif" }}>Loading dashboard…</p>
         </div>
       </div>
     );
   }
 
   const renderSection = () => {
-    if (isLoading) {
-      if (section === "contributions") return <SkeletonTable />;
-      if (section === "profile") return <SkeletonSection />;
-      if (section === "events") return <SkeletonSection />;
-      // dashboard (default)
-      return <SkeletonDashboardOverview />;
-    }
-
+    if (isLoading) return <SkeletonOverview />;
     switch (section) {
       case "dashboard":     return <DashboardOverview />;
       case "profile":       return <ProfileSection />;
@@ -991,19 +872,135 @@ export default function UserDashboard() {
   return (
     <DashboardCtx.Provider value={{ section, setSection, sidebarOpen, setSidebarOpen }}>
       <div
-        className="flex h-screen bg-gray-50 overflow-hidden"
-        style={{ fontFamily: "'Lato', sans-serif" }}
+        className="user-dash"
+        style={{ display:"flex", height:"100vh", background:"var(--cream)", overflow:"hidden", position:"relative" }}
       >
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Sidebar — always rendered; on desktop it's static, on mobile it overlays */}
+        <div style={{
+          // Desktop: always visible; Mobile: hidden unless open
+          display: "flex",
+          flexShrink: 0,
+        }}>
+          {/* Desktop persistent sidebar */}
+          <div style={{
+            width:"16rem", minWidth:"16rem", height:"100vh",
+            background:"linear-gradient(160deg,var(--navy) 0%,var(--navy-mid) 55%,var(--navy-light) 100%)",
+            display: window.innerWidth < 768 ? "none" : "flex",
+            flexDirection:"column",
+            boxShadow:"0 4px 20px rgba(20,33,61,0.15)",
+          }}
+            className="ud-desktop-sidebar"
+          >
+            <SidebarContent />
+          </div>
+        </div>
+
+        {/* Mobile overlay sidebar */}
+        {sidebarOpen && (
+          <>
+            <div
+              onClick={() => setSidebarOpen(false)}
+              style={{ position:"fixed", inset:0, background:"rgba(20,33,61,0.5)", zIndex:199 }}
+            />
+            <div style={{
+              position:"fixed", top:0, left:0, height:"100vh", width:"16rem",
+              background:"linear-gradient(160deg,var(--navy) 0%,var(--navy-mid) 55%,var(--navy-light) 100%)",
+              display:"flex", flexDirection:"column", zIndex:200,
+              boxShadow:"4px 0 20px rgba(20,33,61,0.2)",
+            }}>
+              <SidebarContent />
+            </div>
+          </>
+        )}
+
+        {/* Main content */}
+        <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", minWidth:0 }}>
           <Navbar />
-          <main className="flex-1 overflow-y-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6">
-            <div className="max-w-6xl mx-auto">
+          <main style={{ flex:1, overflowY:"auto", padding:"1.5rem 2rem" }}>
+            <div style={{ maxWidth:1100, margin:"0 auto" }}>
               {renderSection()}
             </div>
           </main>
         </div>
       </div>
     </DashboardCtx.Provider>
+  );
+}
+
+/* ─── Sidebar Content (shared between desktop + mobile) ──────────────────────── */
+function SidebarContent() {
+  const { section, setSection, setSidebarOpen } = useDash();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const nav = (id) => { setSection(id); setSidebarOpen(false); };
+
+  return (
+    <>
+      {/* Logo */}
+      <div style={{
+        padding:"1rem 1.25rem", borderBottom:"1px solid var(--gold-pale)",
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+      }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"0.6rem" }}>
+          <div style={{
+            width:36, height:36, borderRadius:8, flexShrink:0,
+            background:"linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%)",
+            display:"grid", placeItems:"center",
+            boxShadow:"0 4px 12px rgba(201,168,76,0.3)",
+          }}>
+            <CrossIcon size={16} />
+          </div>
+          <div>
+            <p style={{ margin:0, fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"1rem", letterSpacing:"0.06em", color:"var(--cream)" }}>
+              Westlands
+            </p>
+            <p style={{ margin:0, fontSize:"0.6rem", letterSpacing:"0.2em", textTransform:"uppercase", color:"var(--gold)" }}>
+              P.A.G Church
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setSidebarOpen(false)}
+          style={{ background:"none", border:"none", color:"rgba(247,244,238,0.4)", cursor:"pointer", fontSize:"1.1rem", padding:"0.2rem", borderRadius:4, lineHeight:1 }}
+          aria-label="Close"
+        >✕</button>
+      </div>
+
+      {/* Nav */}
+      <nav style={{ flex:1, padding:"1rem", display:"flex", flexDirection:"column", gap:"0.25rem", overflowY:"auto" }}>
+        <p style={{ margin:"0 0 0.5rem 0.5rem", fontSize:"0.62rem", textTransform:"uppercase", letterSpacing:"0.18em", color:"rgba(247,244,238,0.28)", fontWeight:600 }}>
+          Menu
+        </p>
+        {NAV.map(item => (
+          <button
+            key={item.id}
+            onClick={() => nav(item.id)}
+            className={`ud-nav-btn${section === item.id ? " active" : ""}`}
+          >
+            <span style={{ fontSize:"1.1rem", flexShrink:0 }}>{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* Logout */}
+      <div style={{ borderTop:"1px solid var(--gold-pale)", padding:"1rem" }}>
+        <button
+          onClick={() => { logout(); navigate("/login",{replace:true}); }}
+          style={{
+            width:"100%", background:"var(--danger)", border:"none",
+            color:"var(--cream)", fontWeight:600, padding:"0.6rem 1rem",
+            borderRadius:8, cursor:"pointer", transition:"all 0.2s",
+            display:"flex", alignItems:"center", justifyContent:"center", gap:"0.5rem",
+            fontSize:"0.88rem", fontFamily:"'Lato',sans-serif",
+          }}
+          onMouseEnter={e=>e.currentTarget.style.opacity="0.88"}
+          onMouseLeave={e=>e.currentTarget.style.opacity="1"}
+        >
+          🚪 Logout
+        </button>
+      </div>
+    </>
   );
 }

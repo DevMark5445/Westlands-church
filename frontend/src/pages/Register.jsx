@@ -1,1150 +1,1006 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from '../context/AuthContext';
+// src/pages/UserDashboard.jsx
+import { useState, useRef, useEffect, createContext, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-/* ══════════════════════════════════════════════════
-   GLOBAL STYLES
-══════════════════════════════════════════════════ */
-const GLOBAL_CSS = `
+/* ─── Theme CSS (matches AdminDashboard exactly) ─────────────────────────────── */
+const THEME_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { height: 100%; }
-  body {
-    font-family: 'Lato', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    min-height: 100%;
-  }
-  a { text-decoration: none; color: inherit; }
-
   :root {
-    --navy:       #14213d;
-    --navy-mid:   #1e3160;
-    --navy-light: #2a4480;
-    --gold:       #c9a84c;
-    --gold-light: #e8c876;
-    --gold-pale:  rgba(201,168,76,0.12);
-    --cream:      #f7f4ee;
-    --cream-dark: #ede9e0;
-    --white:      #ffffff;
-    --text-body:  #5a6478;
-    --text-light: rgba(247,244,238,0.72);
-    --danger:     #d94f4f;
-    --success:    #3d9970;
-    --ease:       cubic-bezier(0.4,0,0.2,1);
+    --navy: #14213d; --navy-mid: #1e3160; --navy-light: #2a4480;
+    --gold: #c9a84c; --gold-light: #e8c876; --gold-pale: rgba(201,168,76,0.12);
+    --cream: #f7f4ee; --cream-dark: #ede9e0; --white: #ffffff;
+    --text-body: #5a6478; --text-light: rgba(247,244,238,0.72);
+    --danger: #d94f4f; --success: #3d9970; --ease: cubic-bezier(0.4,0,0.2,1);
+  }
+  * { box-sizing: border-box; }
+  body, .user-dash * { font-family: 'Lato', sans-serif; }
+  .user-dash h1, .user-dash h2, .user-dash h3,
+  .user-dash h4, .user-dash h5 { font-family: 'Cinzel', serif; }
+
+  /* Sidebar nav button */
+  .ud-nav-btn {
+    width:100%; display:flex; align-items:center; gap:0.75rem;
+    padding:0.75rem 1rem; border-radius:8px; border:none;
+    background:transparent; color:rgba(247,244,238,0.7);
+    cursor:pointer; transition:all 0.2s ease;
+    font-size:0.9rem; font-weight:400;
+    font-family:'Lato',sans-serif; text-align:left; white-space:nowrap;
+  }
+  .ud-nav-btn:hover { background:rgba(201,168,76,0.15); color:var(--cream); }
+  .ud-nav-btn.active {
+    background:var(--gold); color:var(--navy); font-weight:600;
+  }
+  .ud-nav-btn .nav-icon { font-size:1.2rem; flex-shrink:0; }
+
+  /* Cards */
+  .ud-card {
+    background:var(--white); border-radius:12px;
+    box-shadow:0 2px 8px rgba(20,33,61,0.08);
+    transition:all 0.3s ease;
+  }
+  .ud-card:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(20,33,61,0.13); }
+
+  /* Stat card border accent */
+  .ud-stat-card { border-left:4px solid var(--navy); }
+
+  /* Table rows */
+  .ud-tr:hover { background:var(--cream); }
+
+  /* Input fields */
+  .ud-input {
+    width:100%; padding:0.7rem 1rem;
+    border:1.5px solid rgba(20,33,61,0.14);
+    border-radius:8px; background:var(--white);
+    font-family:'Lato',sans-serif; font-size:0.875rem;
+    color:var(--navy); outline:none;
+    transition:border-color 0.2s, box-shadow 0.2s;
+  }
+  .ud-input:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,168,76,0.15); }
+  .ud-input:disabled { background:var(--cream); color:var(--text-body); cursor:not-allowed; }
+
+  /* Badge */
+  .ud-badge {
+    display:inline-block; padding:0.3rem 0.75rem;
+    border-radius:20px; font-size:0.72rem; font-weight:600;
+    white-space:nowrap;
   }
 
-  @keyframes fadeUp {
-    from { opacity:0; transform:translateY(24px); }
-    to   { opacity:1; transform:translateY(0); }
-  }
-  @keyframes fadeIn {
-    from { opacity:0; }
-    to   { opacity:1; }
-  }
-  @keyframes spin {
-    to { transform:rotate(360deg); }
-  }
-  @keyframes shake {
-    0%,100% { transform:translateX(0); }
-    20%     { transform:translateX(-8px); }
-    40%     { transform:translateX(8px); }
-    60%     { transform:translateX(-5px); }
-    80%     { transform:translateX(5px); }
+  /* Section header */
+  .ud-section-header {
+    padding:1.1rem 1.5rem; border-bottom:1px solid var(--gold-pale);
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:0.5rem;
   }
 
-  /* ── Register page shell ── */
-  .register-page {
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+  /* Mobile backdrop */
+  .ud-backdrop {
+    position:fixed; inset:0; background:rgba(20,33,61,0.5);
+    z-index:199;
   }
 
-  /* ════════════════════════════════════
-     LEFT PANEL — brand
-  ════════════════════════════════════ */
-  .reg-brand {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: clamp(2rem, 5vw, 3.5rem);
-    background: linear-gradient(160deg, var(--navy) 0%, var(--navy-mid) 55%, var(--navy-light) 100%);
-    overflow: hidden;
-  }
-
-  .brand-glow-a {
-    position:absolute; border-radius:50%; pointer-events:none;
-    width:500px; height:500px; top:-150px; right:-120px;
-    background:radial-gradient(circle, rgba(201,168,76,.09) 0%, transparent 70%);
-  }
-  .brand-glow-b {
-    position:absolute; border-radius:50%; pointer-events:none;
-    width:400px; height:400px; bottom:-120px; left:-80px;
-    background:radial-gradient(circle, rgba(42,68,128,.55) 0%, transparent 70%);
-  }
-
-  .brand-watermark {
-    position:absolute; bottom: 10%; right: -40px;
-    opacity:.04; pointer-events:none;
-  }
-  .brand-watermark svg { width:320px; height:320px; fill:var(--white); }
-
-  .brand-top { position:relative; z-index:1; }
-  .brand-logo {
-    display:flex; align-items:center; gap:.65rem;
-  }
-  .brand-logo-mark {
-    width:40px; height:40px; border-radius:8px; flex-shrink:0;
-    background:linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
-    display:grid; place-items:center;
-    box-shadow:0 4px 16px rgba(201,168,76,.3);
-  }
-  .brand-logo-mark svg { width:22px; height:22px; fill:var(--navy); }
-  .brand-logo-text { display:flex; flex-direction:column; line-height:1.1; }
-  .brand-logo-name {
-    font-family:'Cinzel',serif; font-weight:700;
-    font-size:1.1rem; letter-spacing:.08em; color:#f7f4ee;
-  }
-  .brand-logo-tagline {
-    font-size:.6rem; font-weight:300; letter-spacing:.22em;
-    text-transform:uppercase; color:var(--gold);
-  }
-
-  .brand-mid {
-    position:relative; z-index:1;
-    animation: fadeUp .9s var(--ease) .1s both;
-  }
-  .brand-headline {
-    font-family:'Cinzel',serif; font-weight:700;
-    font-size:clamp(1.7rem,3vw,2.6rem); line-height:1.2;
-    color:#f7f4ee; max-width:380px; margin-block-end:1.1rem;
-  }
-  .brand-headline em {
-    font-style:normal;
-    background:linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    background-clip:text;
-  }
-  .brand-body {
-    font-size:.92rem; font-weight:300; line-height:1.8;
-    color:var(--text-light); max-width:360px;
-  }
-
-  /* Onboarding Steps */
-  .brand-steps {
-    display:flex; flex-direction:column; gap:.65rem;
-    margin-block-start:2rem;
-  }
-  .brand-step {
-    display:flex; align-items:flex-start; gap:.75rem;
-    padding:.7rem .9rem;
-    border-radius:10px;
-    background:rgba(255,255,255,.05);
-    border:1px solid rgba(201,168,76,.15);
-    backdrop-filter:blur(4px);
-    animation: fadeUp .7s var(--ease) both;
-  }
-  .brand-step:nth-child(1) { animation-delay:.25s; }
-  .brand-step:nth-child(2) { animation-delay:.35s; }
-  .brand-step:nth-child(3) { animation-delay:.45s; }
-  .brand-step:nth-child(4) { animation-delay:.55s; }
-  .brand-step-num {
-    width:22px; height:22px; border-radius:50%; flex-shrink:0;
-    background:linear-gradient(135deg, var(--gold), var(--gold-light));
-    display:grid; place-items:center;
-    font-size:.65rem; font-weight:700; color:var(--navy);
-    margin-top:1px;
-  }
-  .brand-step-text { display:flex; flex-direction:column; gap:.15rem; }
-  .brand-step-title {
-    font-size:.8rem; font-weight:700;
-    color:rgba(247,244,238,.85); letter-spacing:.02em;
-  }
-  .brand-step-sub {
-    font-size:.72rem; font-weight:300;
-    color:rgba(247,244,238,.45);
-  }
-
-  .brand-bottom {
-    position:relative; z-index:1;
-    font-size:.7rem; font-weight:300; letter-spacing:.06em;
-    color:rgba(247,244,238,.3);
-  }
-
-  /* ════════════════════════════════════
-     RIGHT PANEL — form
-  ════════════════════════════════════ */
-  .register-form-panel {
-    display:flex; flex-direction:column; justify-content:center; align-items:center;
-    background:var(--cream);
-    padding: clamp(2rem, 6vw, 4rem) clamp(1.5rem, 5vw, 3rem);
-    overflow-y: auto;
-    animation: fadeIn .6s var(--ease) both;
-  }
-
-  .register-card {
-    width:100%; max-width:480px;
-  }
-
-  /* Success State */
-  .success-state {
-    display:flex; flex-direction:column; align-items:center;
-    text-align:center; padding:2rem 1rem;
-    animation: fadeUp .6s var(--ease);
-  }
-  .success-icon {
-    width:72px; height:72px; border-radius:50%;
-    background:linear-gradient(135deg, var(--gold), var(--gold-light));
-    display:grid; place-items:center;
-    margin:0 auto 1.5rem;
-    box-shadow:0 8px 30px rgba(201,168,76,.35);
-  }
-  .success-icon svg {
-    width:34px; height:34px; stroke:var(--navy); fill:none;
-    stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round;
-  }
-  .success-title {
-    font-family:'Cinzel',serif; font-weight:700;
-    font-size:1.6rem; color:var(--navy); margin-bottom:.65rem;
-  }
-  .success-body {
-    font-size:.9rem; font-weight:300; line-height:1.7;
-    color:var(--text-body); max-width:340px; margin:0 auto 1.8rem;
-  }
-  .success-body strong { font-weight:700; color:var(--navy); }
-  .success-cta {
-    display:inline-flex; align-items:center; gap:.5rem;
-    padding:.78rem 2rem; border-radius:8px;
-    background:linear-gradient(135deg, var(--gold), var(--gold-light));
-    color:var(--navy); font-family:'Lato',sans-serif;
-    font-size:.85rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-    border:none; cursor:pointer;
-    box-shadow:0 4px 20px rgba(201,168,76,.35);
-    transition:transform .2s var(--ease), box-shadow .2s var(--ease);
-    text-decoration:none;
-  }
-  .success-cta:hover {
-    transform:translateY(-2px);
-    box-shadow:0 8px 30px rgba(201,168,76,.45);
-  }
-  .success-cta svg {
-    width:15px; height:15px; stroke:var(--navy); fill:none;
-    stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
-  }
-
-  /* Form Header */
-  .form-header { margin-block-end:2rem; }
-  .form-eyebrow {
-    display:inline-flex; align-items:center; gap:.45rem;
-    margin-block-end:.9rem; padding:.28rem .8rem;
-    border-radius:100px;
-    border:1px solid rgba(201,168,76,.3);
-    background:rgba(201,168,76,.08);
-    font-size:.65rem; font-weight:400; letter-spacing:.22em;
-    text-transform:uppercase; color:var(--gold);
-    animation: fadeIn .6s ease .2s both;
-  }
-  .form-eyebrow-dot {
-    width:5px; height:5px; border-radius:50%;
-    background:var(--gold); flex-shrink:0;
-  }
-  .form-title {
-    font-family:'Cinzel',serif; font-weight:700;
-    font-size:clamp(1.4rem,3vw,1.9rem); color:var(--navy);
-    line-height:1.2; letter-spacing:-.01em;
-    animation: fadeUp .65s var(--ease) .15s both;
-  }
-  .form-subtitle {
-    margin-block-start:.5rem;
-    font-size:.875rem; font-weight:300; line-height:1.6; color:var(--text-body);
-    animation: fadeUp .65s var(--ease) .25s both;
-  }
-
-  /* Fields Grid */
-  .fields-grid {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:0 1rem;
-  }
-  .field-full { grid-column: 1 / -1; }
-
-  /* ── Field ── */
-  .field { margin-block-end:1.1rem; }
-  .field-label {
-    display:block; margin-block-end:.42rem;
-    font-size:.72rem; font-weight:700;
-    letter-spacing:.1em; text-transform:uppercase;
-    color:var(--navy);
-  }
-  .field-wrap { position:relative; }
-  .field-icon {
-    position:absolute; left:.9rem; top:50%; transform:translateY(-50%);
-    display:flex; align-items:center; pointer-events:none;
-  }
-  .field-icon svg {
-    width:15px; height:15px; stroke:var(--text-body); fill:none;
-    stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;
-    transition:stroke .2s;
-  }
-  .field-input {
-    width:100%; padding:.75rem 2.8rem .75rem 2.55rem;
-    border-radius:8px;
-    border:1.5px solid rgba(20,33,61,.14);
-    background:var(--white);
-    font-family:'Lato',sans-serif; font-size:.875rem; font-weight:400;
-    color:var(--navy);
-    outline:none;
-    transition:border-color .2s, box-shadow .2s;
-    -webkit-appearance:none;
-  }
-  .field-input::placeholder { color:rgba(90,100,120,.4); font-weight:300; }
-  .field-input:focus {
-    border-color:var(--gold);
-    box-shadow:0 0 0 3px rgba(201,168,76,.15);
-  }
-  .field-wrap:focus-within .field-icon svg { stroke:var(--gold); }
-  .field-input.error {
-    border-color:var(--danger);
-    box-shadow:0 0 0 3px rgba(217,79,79,.12);
-  }
-
-  /* Select */
-  .field-select {
-    width:100%; padding:.75rem 2.55rem .75rem 2.55rem;
-    border-radius:8px;
-    border:1.5px solid rgba(20,33,61,.14);
-    background:var(--white);
-    font-family:'Lato',sans-serif; font-size:.875rem;
-    color:var(--navy); outline:none; cursor:pointer;
-    transition:border-color .2s, box-shadow .2s;
-    -webkit-appearance:none;
-  }
-  .field-select:focus {
-    border-color:var(--gold);
-    box-shadow:0 0 0 3px rgba(201,168,76,.15);
-  }
-  .field-select.error {
-    border-color:var(--danger);
-    box-shadow:0 0 0 3px rgba(217,79,79,.12);
-  }
-  .select-chevron {
-    position:absolute; right:.9rem; top:50%; transform:translateY(-50%);
-    pointer-events:none; display:flex; align-items:center;
-  }
-  .select-chevron svg {
-    width:14px; height:14px; stroke:var(--text-body); fill:none;
-    stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
-  }
-
-  /* Password toggle */
-  .pwd-toggle {
-    position:absolute; right:.85rem; top:50%; transform:translateY(-50%);
-    background:none; border:none; cursor:pointer; padding:.2rem;
-    display:flex; align-items:center; outline:none; border-radius:4px;
-  }
-  .pwd-toggle svg {
-    width:16px; height:16px; stroke:var(--text-body); fill:none;
-    stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;
-    transition:stroke .2s;
-  }
-  .pwd-toggle:hover svg { stroke:var(--gold); }
-  .pwd-toggle:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
-
-  /* Password Strength */
-  .pwd-strength { margin-top:.5rem; }
-  .pwd-bars { display:flex; gap:3px; margin-bottom:.3rem; }
-  .pwd-bar {
-    flex:1; height:3px; border-radius:2px;
-    background:rgba(20,33,61,.1);
-    transition:background .3s;
-  }
-  .pwd-bar.strength-1 { background:#d94f4f; }
-  .pwd-bar.strength-2 { background:#e07b2a; }
-  .pwd-bar.strength-3 { background:#c9a84c; }
-  .pwd-bar.strength-4 { background:#3d9970; }
-  .pwd-hint {
-    font-size:.7rem; font-weight:300; color:var(--text-body);
-  }
-
-  /* Field error */
-  .field-error {
-    display:flex; align-items:center; gap:.35rem;
-    margin-block-start:.35rem;
-    font-size:.72rem; color:var(--danger); font-weight:400;
-    animation:fadeIn .2s ease;
-  }
-  .field-error svg {
-    width:12px; height:12px; stroke:var(--danger); fill:none;
-    stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0;
-  }
-
-  /* Terms row */
-  .terms-row {
-    display:flex; align-items:flex-start; gap:.6rem;
-    margin-block-end:1.4rem;
-  }
-  .terms-checkbox {
-    accent-color:var(--gold); width:15px; height:15px;
-    cursor:pointer; flex-shrink:0; margin-top:2px;
-  }
-  .terms-label {
-    font-size:.8rem; font-weight:300;
-    color:var(--text-body); line-height:1.5; cursor:pointer;
-  }
-  .terms-label a { color:var(--gold); font-weight:400; transition:color .2s; }
-  .terms-label a:hover { color:var(--navy); }
-
-  /* Submit button */
-  .submit-btn {
-    width:100%; padding:.9rem 1.5rem;
-    border-radius:8px; border:none; cursor:pointer; outline:none;
-    display:flex; align-items:center; justify-content:center; gap:.55rem;
-    background:linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
-    color:var(--navy);
-    font-family:'Lato',sans-serif; font-size:.88rem; font-weight:700;
-    letter-spacing:.1em; text-transform:uppercase;
-    box-shadow:0 4px 20px rgba(201,168,76,.35);
-    transition:transform .22s var(--ease), box-shadow .22s var(--ease), filter .22s;
-  }
-  .submit-btn:hover:not(:disabled) {
-    transform:translateY(-2px);
-    box-shadow:0 8px 30px rgba(201,168,76,.45);
-    filter:brightness(1.04);
-  }
-  .submit-btn:active:not(:disabled) { transform:translateY(0); }
-  .submit-btn:focus-visible { outline:2px solid var(--navy); outline-offset:3px; }
-  .submit-btn:disabled { opacity:.7; cursor:not-allowed; }
-  .submit-btn svg {
-    width:16px; height:16px; stroke:var(--navy); fill:none;
-    stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
-  }
-
-  /* Spinner */
-  .spinner {
-    width:16px; height:16px; border-radius:50%; flex-shrink:0;
-    border:2px solid rgba(20,33,61,.25);
-    border-top-color:var(--navy);
-    animation:spin .7s linear infinite;
-  }
-
-  /* Shake */
-  .form-shake { animation:shake .4s var(--ease); }
-
-  /* Alert */
-  .alert {
-    display:flex; align-items:flex-start; gap:.65rem;
-    padding:.85rem 1rem; border-radius:8px; margin-block-end:1.4rem;
-    font-size:.82rem; line-height:1.55;
-    animation:fadeIn .3s ease;
-  }
-  .alert-danger {
-    background:rgba(217,79,79,.09);
-    border:1px solid rgba(217,79,79,.25);
-    color:var(--danger);
-  }
-  .alert-success {
-    background:rgba(61,153,112,.09);
-    border:1px solid rgba(61,153,112,.25);
-    color:var(--success);
-  }
-  .alert svg {
-    width:16px; height:16px; flex-shrink:0; margin-block-start:.05rem;
-    stroke:currentColor; fill:none;
-    stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
-  }
-
-  /* Divider */
-  .form-divider {
-    display:flex; align-items:center; gap:.9rem;
-    margin-block:1.4rem;
-  }
-  .form-divider-line {
-    flex:1; height:1px;
-    background:linear-gradient(90deg, transparent, rgba(20,33,61,.12), transparent);
-  }
-  .form-divider-text {
-    font-size:.7rem; font-weight:300; letter-spacing:.12em;
-    text-transform:uppercase; color:rgba(90,100,120,.5); white-space:nowrap;
-  }
-
-  /* Back link */
-  .back-link {
-    display:inline-flex; align-items:center; gap:.4rem;
-    margin-block-start:.2rem;
-    font-size:.8rem; font-weight:400; color:var(--text-body);
-    letter-spacing:.03em; transition:color .2s; outline:none; border-radius:3px;
-  }
-  .back-link:hover { color:var(--navy); }
-  .back-link:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
-  .back-link svg {
-    width:14px; height:14px; stroke:currentColor; fill:none;
-    stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
-    transition:transform .2s;
-  }
-  .back-link:hover svg { transform:translateX(-3px); }
-
-  /* Footer note */
-  .form-footer-note {
-    margin-block-start:1.8rem; text-align:center;
-    font-size:.72rem; font-weight:300; color:rgba(90,100,120,.55);
-    line-height:1.6;
-  }
-  .form-footer-note a {
-    color:var(--gold); font-weight:400; transition:color .2s;
-  }
-  .form-footer-note a:hover { color:var(--navy); }
-
-  /* ════════════════════════════════════
-     RESPONSIVE
-  ════════════════════════════════════ */
-  @media(max-width:860px) {
-    .register-page { grid-template-columns:1fr; }
-    .reg-brand { display:none; }
-    .register-form-panel {
-      min-height:100vh;
-      justify-content:flex-start;
-      padding-block-start:2.5rem;
+  /* Sidebar overlay on mobile */
+  @media(max-width:768px) {
+    .ud-sidebar {
+      position:fixed !important; top:0; left:0;
+      height:100vh; z-index:200;
     }
   }
-  @media(max-width:520px) {
-    .fields-grid { grid-template-columns:1fr; }
-    .field-full  { grid-column:auto; }
-  }
 
-  /* Mobile brand bar */
-  .mobile-brand-bar {
-    display:none;
-    align-items:center; justify-content:center; gap:.6rem;
-    padding:1rem; background:var(--navy);
-    border-bottom:2px solid var(--gold);
-  }
-  .mobile-brand-bar .brand-logo-mark {
-    width:32px; height:32px; border-radius:6px;
-    background:linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%);
-    display:grid; place-items:center;
-  }
-  .mobile-brand-bar .brand-logo-mark svg { width:18px; height:18px; fill:var(--navy); }
-  .mobile-brand-bar .brand-logo-name {
-    font-family:'Cinzel',serif; font-weight:700;
-    font-size:.95rem; letter-spacing:.08em; color:#f7f4ee;
-  }
-  @media(max-width:860px) {
-    .mobile-brand-bar { display:flex; }
-  }
+  /* Pulse animation */
+  @keyframes ud-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .ud-pulse { animation:ud-pulse 1.5s ease-in-out infinite; }
+
+  /* Fade up */
+  @keyframes ud-fadeup { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .ud-fadeup { animation:ud-fadeup 0.45s var(--ease) both; }
 `;
 
-/* ══════════════════════════════════════════════════
-   SVG ATOMS
-══════════════════════════════════════════════════ */
-const CrossSvg = ({ size = 22 }) => (
-  <svg viewBox="0 0 20 20" aria-hidden="true" style={{ width: size, height: size }}>
+/* ─── Context ────────────────────────────────────────────────────────────────── */
+const DashboardCtx = createContext(null);
+const useDash = () => useContext(DashboardCtx);
+
+/* ─── Mock Data ──────────────────────────────────────────────────────────────── */
+const contributions = [
+  { id: 1, type: "Tithe",         amount: 12000, date: "2025-04-06", status: "Verified" },
+  { id: 2, type: "Offering",      amount:  2500, date: "2025-04-06", status: "Verified" },
+  { id: 3, type: "Donation",      amount:  5000, date: "2025-03-30", status: "Verified" },
+  { id: 4, type: "Tithe",         amount: 12000, date: "2025-03-23", status: "Verified" },
+  { id: 5, type: "Building Fund", amount: 10000, date: "2025-03-16", status: "Verified" },
+  { id: 6, type: "Offering",      amount:  2000, date: "2025-03-09", status: "Verified" },
+];
+const upcomingEvents = [
+  { id: 1, name: "Sunday Worship Service",  date: "2025-04-20", time: "9:00 AM",  location: "Main Sanctuary",  category: "Worship"    },
+  { id: 2, name: "Youth Fellowship Night",  date: "2025-04-22", time: "6:00 PM",  location: "Fellowship Hall", category: "Fellowship" },
+  { id: 3, name: "Midweek Prayer Meeting",  date: "2025-04-23", time: "7:00 PM",  location: "Prayer Room",     category: "Prayer"     },
+  { id: 4, name: "Worship Team Rehearsal",  date: "2025-04-25", time: "5:30 PM",  location: "Music Room",      category: "Ministry"   },
+];
+const recentActivities = [
+  { id: 1, action: "Tithe payment submitted",    amount: 12000, date: "2025-04-06", icon: "💰" },
+  { id: 2, action: "Attended Sunday Service",                   date: "2025-04-06", icon: "⛪" },
+  { id: 3, action: "Donation to Building Fund",  amount:  5000, date: "2025-03-30", icon: "💰" },
+  { id: 4, action: "Attended Youth Fellowship",                 date: "2025-03-28", icon: "👥" },
+  { id: 5, action: "Profile updated",                           date: "2025-03-25", icon: "👤" },
+];
+const notifData = [
+  { id: 1, message: "Your April tithe has been verified.",          time: "2 hours ago", read: false },
+  { id: 2, message: "Youth Fellowship Night is tomorrow at 6 PM.", time: "1 day ago",   read: false },
+  { id: 3, message: "New event: Easter Sunday Celebration added.", time: "2 days ago",  read: false },
+];
+
+/* ─── Helpers ────────────────────────────────────────────────────────────────── */
+const fmtDate = (d) => new Date(d).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" });
+const fmtCur  = (n) => `KES ${n.toLocaleString()}`;
+const getInitials = (f, l) => `${(f || "").charAt(0)}${(l || "").charAt(0)}`.toUpperCase() || "U";
+
+/* ─── Nav Items ──────────────────────────────────────────────────────────────── */
+const NAV = [
+  { id: "dashboard",     label: "Dashboard",      icon: "📊" },
+  { id: "profile",       label: "My Profile",     icon: "👤" },
+  { id: "contributions", label: "Contributions",  icon: "💰" },
+  { id: "events",        label: "Events",         icon: "📅" },
+];
+
+const SECTION_TITLES = {
+  dashboard:     "Dashboard",
+  profile:       "My Profile",
+  contributions: "My Contributions",
+  events:        "Upcoming Events",
+};
+
+/* ─── Cross Icon ─────────────────────────────────────────────────────────────── */
+const CrossIcon = ({ size = 18 }) => (
+  <svg viewBox="0 0 20 20" style={{ width: size, height: size, fill: "var(--navy)" }} aria-hidden="true">
     <rect x="8.5" y="1"   width="3"  height="18" rx="1" />
     <rect x="2"   y="6.5" width="16" height="3"  rx="1" />
   </svg>
 );
 
-const UserIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-    <circle cx="12" cy="7" r="4"/>
-  </svg>
-);
+/* ─── Avatar ─────────────────────────────────────────────────────────────────── */
+function Avatar({ firstName, lastName, size = 36 }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: size > 50 ? "12px" : "50%",
+      background: "linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%)",
+      color: "var(--navy)", display: "flex", alignItems: "center",
+      justifyContent: "center", fontWeight: 700,
+      fontSize: size > 50 ? "1.4rem" : "0.85rem",
+      flexShrink: 0, userSelect: "none",
+      fontFamily: "'Lato',sans-serif",
+    }}>
+      {getInitials(firstName, lastName)}
+    </div>
+  );
+}
 
-const EmailIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-    <polyline points="22,6 12,13 2,6"/>
-  </svg>
-);
+/* ─── Skeleton ───────────────────────────────────────────────────────────────── */
+function Skel({ w = "100%", h = 18, r = 6 }) {
+  return (
+    <div className="ud-pulse" style={{
+      width: w, height: h, borderRadius: r,
+      background: "rgba(20,33,61,0.08)",
+    }} />
+  );
+}
+function SkeletonOverview() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <div className="ud-pulse" style={{ height: 130, borderRadius: 16, background: "rgba(20,33,61,0.08)" }} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "1rem" }}>
+        {[1,2,3,4].map(i => (
+          <div key={i} className="ud-card" style={{ padding: "1.25rem" }}>
+            <Skel w={40} h={40} r={8} /><br/>
+            <Skel w="60%" h={28} /><br/>
+            <Skel w="80%" h={14} />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+        <div className="ud-card" style={{ padding: "1.25rem", display:"flex", flexDirection:"column", gap:"0.75rem" }}>
+          <Skel w="50%" h={16} />
+          {[1,2,3].map(i => <Skel key={i} h={48} r={8} />)}
+        </div>
+        <div className="ud-card" style={{ padding: "1.25rem", display:"flex", flexDirection:"column", gap:"0.75rem" }}>
+          <Skel w="50%" h={16} />
+          {[1,2,3].map(i => <Skel key={i} h={48} r={8} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-const PhoneIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.8a16 16 0 0 0 5.29 5.29l.95-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/>
-  </svg>
-);
-
-const LockIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-  </svg>
-);
-
-const EyeIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-    <circle cx="12" cy="12" r="3"/>
-  </svg>
-);
-
-const EyeOffIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-    <line x1="1" y1="1" x2="23" y2="23"/>
-  </svg>
-);
-
-const ArrowLeftIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <line x1="19" y1="12" x2="5" y2="12"/>
-    <polyline points="12 19 5 12 12 5"/>
-  </svg>
-);
-
-const AlertCircle = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <circle cx="12" cy="12" r="10"/>
-    <line x1="12" y1="8"  x2="12"    y2="12"/>
-    <line x1="12" y1="16" x2="12.01" y2="16"/>
-  </svg>
-);
-
-const UserPlusIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-    <circle cx="8.5" cy="7" r="4"/>
-    <line x1="20" y1="8" x2="20" y2="14"/>
-    <line x1="23" y1="11" x2="17" y2="11"/>
-  </svg>
-);
-
-/* ══════════════════════════════════════════════════
-   VALIDATION
-══════════════════════════════════════════════════ */
-const validate = (fields) => {
-  const errs = {};
-  if (!fields.firstName.trim())
-    errs.firstName = "First name is required.";
-
-  if (!fields.lastName.trim())
-    errs.lastName = "Last name is required.";
-
-  if (!fields.email.trim())
-    errs.email = "Email address is required.";
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email))
-    errs.email = "Please enter a valid email address.";
-
-  if (fields.phone && !/^[+\d\s\-()]{7,}$/.test(fields.phone))
-    errs.phone = "Please enter a valid phone number.";
-
-  if (!fields.password)
-    errs.password = "Password is required.";
-  else if (fields.password.length < 8)
-    errs.password = "Password must be at least 8 characters.";
-
-  if (!fields.confirmPassword)
-    errs.confirmPassword = "Please confirm your password.";
-  else if (fields.password && fields.confirmPassword !== fields.password)
-    errs.confirmPassword = "Passwords do not match.";
-
-  if (!fields.terms)
-    errs.terms = "You must accept the terms to continue.";
-
-  return errs;
-};
-
-/* ══════════════════════════════════════════════════
-   PASSWORD STRENGTH HELPER
-══════════════════════════════════════════════════ */
-const getPasswordStrength = (pwd) => {
-  if (!pwd) return { score: 0, label: "" };
-  let score = 0;
-  if (pwd.length >= 8)          score++;
-  if (/[A-Z]/.test(pwd))        score++;
-  if (/[0-9]/.test(pwd))        score++;
-  if (/[^A-Za-z0-9]/.test(pwd)) score++;
-  const labels = ["", "Weak", "Fair", "Strong", "Very strong"];
-  return { score, label: labels[score] || "" };
-};
-
-/* ══════════════════════════════════════════════════
-   ONBOARDING STEPS (left panel)
-══════════════════════════════════════════════════ */
-const STEPS = [
-  { title: "Create Your Account",  sub: "Fill in your details on the right" },
-  { title: "Verify Your Email",    sub: "Check your inbox for a link" },
-  { title: "Set Up Your Profile",  sub: "Add your church details" },
-  { title: "Start Managing",       sub: "Full dashboard access unlocked" },
-];
-
-/* ══════════════════════════════════════════════════
-   REGISTER PAGE COMPONENT
-══════════════════════════════════════════════════ */
-export default function RegisterPage() {
-  const { register, isAuthenticated } = useAuth();
+/* ─── Sidebar ────────────────────────────────────────────────────────────────── */
+function Sidebar() {
+  const { section, setSection, sidebarOpen, setSidebarOpen } = useDash();
+  const { logout } = useAuth();
   const navigate = useNavigate();
-  
-  // Redirect if already logged in
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
-  
-  /* ── form state ── */
-  const [firstName,       setFirstName]       = useState("");
-  const [lastName,        setLastName]        = useState("");
-  const [email,           setEmail]           = useState("");
-  const [phone,           setPhone]           = useState("");
-  const [password,        setPassword]        = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [terms,           setTerms]           = useState(false);
 
-  /* ── UI state ── */
-  const [showPwd,     setShowPwd]     = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [errors,      setErrors]      = useState({});
-  const [loading,     setLoading]     = useState(false);
-  const [alert,       setAlert]       = useState(null);
-  const [shake,       setShake]       = useState(false);
+  const nav = (id) => { setSection(id); setSidebarOpen(false); };
 
-  const pwdStrength = getPasswordStrength(password);
-
-  /* Inject global CSS */
-  useEffect(() => {
-    const id = "gracehub-register-css";
-    if (!document.getElementById(id)) {
-      const tag = document.createElement("style");
-      tag.id = id;
-      tag.textContent = GLOBAL_CSS;
-      document.head.appendChild(tag);
-    }
-  }, []);
-
-  const triggerShake = () => {
-    setShake(true);
-    setTimeout(() => setShake(false), 420);
-  };
-
-  const clearFieldError = (field) =>
-    setErrors((prev) => ({ ...prev, [field]: "" }));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setAlert(null);
-
-    const errs = validate({
-      firstName, lastName, email, phone,
-      password, confirmPassword, terms,
-    });
-
-    if (Object.keys(errs).length) {
-      setErrors(errs);
-      triggerShake();
-      return;
-    }
-
-    setErrors({});
-    setLoading(true);
-
-    try {
-      const userData = {
-        firstName,
-        lastName,
-        email,
-        phoneNumber: phone,
-        password,
-      };
-
-      const result = await register(userData);
-
-      if (result.success) {
-        setAlert({ type: "success", message: result.message || "Registration successful! Redirecting to dashboard..." });
-        // Redirect to dashboard after brief delay
-        setTimeout(() => navigate('/dashboard', { replace: true }), 800);
-      } else if (result.redirectToDashboard) {
-        // API unavailable (404) or network error - redirect to dashboard directly
-        console.warn("API unavailable, redirecting to dashboard");
-        setAlert({ type: "success", message: "Redirecting to dashboard..." });
-        setTimeout(() => navigate('/dashboard', { replace: true }), 300);
-      } else {
-        setAlert({ type: "danger", message: result.message || "Registration failed. Please try again." });
-        triggerShake();
-      }
-    } catch (error) {
-      console.error("Registration error:", error);
-      const errorMessage = error.message || "Network error. Please check your connection and try again.";
-      setAlert({ type: "danger", message: errorMessage });
-      triggerShake();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* ────────────────────────────────────────────── */
-  /*  MAIN FORM VIEW                                */
-  /* ────────────────────────────────────────────── */
   return (
     <>
-      {/* Mobile top brand bar */}
-      <div className="mobile-brand-bar" aria-hidden="true">
-        <div className="brand-logo-mark"><CrossSvg size={18} /></div>
-        <span className="brand-logo-name">Westlands P.A.G</span>
-      </div>
-
-      <div className="register-page">
-        <BrandPanel />
-
-        <main className="register-form-panel" id="main-content">
-          <div className="register-card">
-
-            {/* Header */}
-            <div className="form-header">
-              <div className="form-eyebrow">
-                <span className="form-eyebrow-dot" />
-                New Account
-              </div>
-              <h1 className="form-title">Create Account</h1>
-              <p className="form-subtitle">
-                Join the Westlands P.A.G community hub and manage your
-                congregation with ease.
+      {sidebarOpen && (
+        <div className="ud-backdrop" style={{ display: "block" }}
+          onClick={() => setSidebarOpen(false)} />
+      )}
+      <div
+        className="ud-sidebar"
+        style={{
+          width: "16rem", minWidth: "16rem", height: "100vh",
+          background: "linear-gradient(160deg,var(--navy) 0%,var(--navy-mid) 55%,var(--navy-light) 100%)",
+          display: "flex", flexDirection: "column",
+          boxShadow: "0 4px 20px rgba(20,33,61,0.15)",
+          flexShrink: 0, overflow: "hidden",
+          transition: "transform 0.3s ease",
+          // On mobile handled by CSS class
+        }}
+      >
+        {/* Logo */}
+        <div style={{
+          padding: "1rem 1.25rem",
+          borderBottom: "1px solid var(--gold-pale)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: "0.75rem",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+              background: "linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%)",
+              display: "grid", placeItems: "center",
+              boxShadow: "0 4px 12px rgba(201,168,76,0.3)",
+            }}>
+              <CrossIcon size={16} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontFamily: "'Cinzel',serif", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.06em", color: "var(--cream)" }}>
+                Westlands
+              </p>
+              <p style={{ margin: 0, fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--gold)" }}>
+                P.A.G Church
               </p>
             </div>
-
-            {/* Alert banner */}
-            {alert && (
-              <div
-                className={`alert alert-${alert.type}`}
-                role="alert"
-                aria-live="assertive"
-              >
-                <AlertCircle />
-                <span>{alert.message}</span>
-              </div>
-            )}
-
-            {/* Form */}
-            <form
-              onSubmit={handleSubmit}
-              noValidate
-              className={shake ? "form-shake" : ""}
-              aria-label="Registration form"
-            >
-              <div className="fields-grid">
-
-                {/* ── First Name ── */}
-                <div className="field">
-                  <label className="field-label" htmlFor="firstName">
-                    First Name
-                  </label>
-                  <div className="field-wrap">
-                    <span className="field-icon"><UserIcon /></span>
-                    <input
-                      id="firstName"
-                      type="text"
-                      className={`field-input${errors.firstName ? " error" : ""}`}
-                      placeholder="John"
-                      value={firstName}
-                      onChange={(e) => { setFirstName(e.target.value); clearFieldError("firstName"); }}
-                      autoComplete="given-name"
-                      aria-required="true"
-                      aria-invalid={!!errors.firstName}
-                      aria-describedby={errors.firstName ? "firstName-error" : undefined}
-                    />
-                  </div>
-                  {errors.firstName && (
-                    <p className="field-error" id="firstName-error" role="alert">
-                      <AlertCircle />{errors.firstName}
-                    </p>
-                  )}
-                </div>
-
-                {/* ── Last Name ── */}
-                <div className="field">
-                  <label className="field-label" htmlFor="lastName">
-                    Last Name
-                  </label>
-                  <div className="field-wrap">
-                    <span className="field-icon"><UserIcon /></span>
-                    <input
-                      id="lastName"
-                      type="text"
-                      className={`field-input${errors.lastName ? " error" : ""}`}
-                      placeholder="Kamau"
-                      value={lastName}
-                      onChange={(e) => { setLastName(e.target.value); clearFieldError("lastName"); }}
-                      autoComplete="family-name"
-                      aria-required="true"
-                      aria-invalid={!!errors.lastName}
-                      aria-describedby={errors.lastName ? "lastName-error" : undefined}
-                    />
-                  </div>
-                  {errors.lastName && (
-                    <p className="field-error" id="lastName-error" role="alert">
-                      <AlertCircle />{errors.lastName}
-                    </p>
-                  )}
-                </div>
-
-                {/* ── Email ── */}
-                <div className="field field-full">
-                  <label className="field-label" htmlFor="reg-email">
-                    Email Address
-                  </label>
-                  <div className="field-wrap">
-                    <span className="field-icon"><EmailIcon /></span>
-                    <input
-                      id="reg-email"
-                      type="email"
-                      className={`field-input${errors.email ? " error" : ""}`}
-                      placeholder="john.kamau@email.com"
-                      value={email}
-                      onChange={(e) => { setEmail(e.target.value); clearFieldError("email"); }}
-                      autoComplete="email"
-                      aria-required="true"
-                      aria-invalid={!!errors.email}
-                      aria-describedby={errors.email ? "email-error" : undefined}
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="field-error" id="email-error" role="alert">
-                      <AlertCircle />{errors.email}
-                    </p>
-                  )}
-                </div>
-
-                {/* ── Phone ── */}
-                <div className="field">
-                  <label className="field-label" htmlFor="phone">
-                    Phone Number
-                  </label>
-                  <div className="field-wrap">
-                    <span className="field-icon"><PhoneIcon /></span>
-                    <input
-                      id="phone"
-                      type="tel"
-                      className={`field-input${errors.phone ? " error" : ""}`}
-                      placeholder="+254 7XX XXX XXX"
-                      value={phone}
-                      onChange={(e) => { setPhone(e.target.value); clearFieldError("phone"); }}
-                      autoComplete="tel"
-                      aria-describedby={errors.phone ? "phone-error" : undefined}
-                      aria-invalid={!!errors.phone}
-                    />
-                  </div>
-                  {errors.phone && (
-                    <p className="field-error" id="phone-error" role="alert">
-                      <AlertCircle />{errors.phone}
-                    </p>
-                  )}
-                </div>
-
-                {/* ── Password ── */}
-                <div className="field">
-                  <label className="field-label" htmlFor="reg-password">
-                    Password
-                  </label>
-                  <div className="field-wrap">
-                    <span className="field-icon"><LockIcon /></span>
-                    <input
-                      id="reg-password"
-                      type={showPwd ? "text" : "password"}
-                      className={`field-input${errors.password ? " error" : ""}`}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => { setPassword(e.target.value); clearFieldError("password"); }}
-                      autoComplete="new-password"
-                      aria-required="true"
-                      aria-invalid={!!errors.password}
-                      aria-describedby="pwd-strength-hint"
-                    />
-                    <button
-                      type="button"
-                      className="pwd-toggle"
-                      onClick={() => setShowPwd((v) => !v)}
-                      aria-label={showPwd ? "Hide password" : "Show password"}
-                    >
-                      {showPwd ? <EyeOffIcon /> : <EyeIcon />}
-                    </button>
-                  </div>
-                  {/* Strength meter */}
-                  {password && (
-                    <div className="pwd-strength" aria-live="polite">
-                      <div className="pwd-bars" role="presentation">
-                        {[1, 2, 3, 4].map((i) => (
-                          <div
-                            key={i}
-                            className={`pwd-bar${i <= pwdStrength.score ? ` strength-${pwdStrength.score}` : ""}`}
-                          />
-                        ))}
-                      </div>
-                      <span className="pwd-hint" id="pwd-strength-hint">
-                        {pwdStrength.label}
-                      </span>
-                    </div>
-                  )}
-                  {errors.password && (
-                    <p className="field-error" role="alert">
-                      <AlertCircle />{errors.password}
-                    </p>
-                  )}
-                </div>
-
-                {/* ── Confirm Password ── */}
-                <div className="field">
-                  <label className="field-label" htmlFor="confirmPassword">
-                    Confirm Password
-                  </label>
-                  <div className="field-wrap">
-                    <span className="field-icon"><LockIcon /></span>
-                    <input
-                      id="confirmPassword"
-                      type={showConfirm ? "text" : "password"}
-                      className={`field-input${errors.confirmPassword ? " error" : ""}`}
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={(e) => { setConfirmPassword(e.target.value); clearFieldError("confirmPassword"); }}
-                      autoComplete="new-password"
-                      aria-required="true"
-                      aria-invalid={!!errors.confirmPassword}
-                      aria-describedby={errors.confirmPassword ? "confirm-error" : undefined}
-                    />
-                    <button
-                      type="button"
-                      className="pwd-toggle"
-                      onClick={() => setShowConfirm((v) => !v)}
-                      aria-label={showConfirm ? "Hide password" : "Show password"}
-                    >
-                      {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="field-error" id="confirm-error" role="alert">
-                      <AlertCircle />{errors.confirmPassword}
-                    </p>
-                  )}
-                </div>
-
-              </div>{/* /fields-grid */}
-
-              {/* ── Terms ── */}
-              <div className="terms-row">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  className="terms-checkbox"
-                  checked={terms}
-                  onChange={(e) => { setTerms(e.target.checked); clearFieldError("terms"); }}
-                  aria-required="true"
-                  aria-describedby={errors.terms ? "terms-error" : undefined}
-                />
-                <label className="terms-label" htmlFor="terms">
-                  I agree to the{" "}
-                  <a href="/terms" target="_blank" rel="noreferrer">Terms of Service</a>
-                  {" "}and{" "}
-                  <a href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>
-                  {" "}of Westlands P.A.G Church Management System.
-                </label>
-              </div>
-              {errors.terms && (
-                <p className="field-error" id="terms-error" role="alert"
-                   style={{ marginBottom: "1rem" }}>
-                  <AlertCircle />{errors.terms}
-                </p>
-              )}
-
-              {/* ── Submit ── */}
-              <button
-                type="submit"
-                className="submit-btn"
-                disabled={loading}
-                aria-busy={loading}
-              >
-                {loading ? (
-                  <>
-                    <span className="spinner" aria-hidden="true" />
-                    Creating account…
-                  </>
-                ) : (
-                  <>
-                    <UserPlusIcon />
-                    Create Account
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Divider */}
-            <div className="form-divider" aria-hidden="true">
-              <div className="form-divider-line" />
-              <span className="form-divider-text">Secure · Encrypted · Private</span>
-              <div className="form-divider-line" />
-            </div>
-
-            {/* Back to login */}
-            <Link to="/login" className="back-link">
-              <ArrowLeftIcon />
-              Already have an account? Sign in
-            </Link>
-
-            {/* Footer note */}
-            <p className="form-footer-note">
-              Need help? Contact your{" "}
-              <a href="mailto:support@westlandspag.org">church administrator</a>
-              {" "}or visit our{" "}
-              <a href="/support">support centre</a>.
-            </p>
-
           </div>
-        </main>
+          <button onClick={() => setSidebarOpen(false)}
+            style={{ background:"none", border:"none", color:"rgba(247,244,238,0.5)", cursor:"pointer", fontSize:"1.2rem", padding:"0.25rem", borderRadius:"4px" }}
+            aria-label="Close sidebar">✕</button>
+        </div>
+
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: "1rem", display: "flex", flexDirection: "column", gap: "0.35rem", overflowY: "auto" }}>
+          <p style={{ margin: "0 0 0.5rem 0", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(247,244,238,0.3)", fontWeight: 600, paddingLeft: "0.5rem" }}>
+            Menu
+          </p>
+          {NAV.map(item => (
+            <button
+              key={item.id}
+              onClick={() => nav(item.id)}
+              className={`ud-nav-btn${section === item.id ? " active" : ""}`}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* Logout */}
+        <div style={{ borderTop: "1px solid var(--gold-pale)", padding: "1rem" }}>
+          <button
+            onClick={() => { logout(); navigate("/login", { replace: true }); }}
+            style={{
+              width: "100%", background: "var(--danger)", border: "none",
+              color: "var(--cream)", fontWeight: 600, padding: "0.6rem 1rem",
+              borderRadius: 8, cursor: "pointer", transition: "all 0.2s ease",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+              fontSize: "0.9rem", fontFamily: "'Lato',sans-serif",
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "0.88"}
+            onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+          >
+            🚪 Logout
+          </button>
+        </div>
       </div>
     </>
   );
 }
 
-/* ══════════════════════════════════════════════════
-   BRAND PANEL (extracted to avoid duplication)
-══════════════════════════════════════════════════ */
-function BrandPanel() {
+/* ─── Notification Panel ─────────────────────────────────────────────────────── */
+function NotifPanel({ onClose }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [onClose]);
+
   return (
-    <aside className="reg-brand" aria-label="Westlands P.A.G brand panel">
-      <div className="brand-glow-a" aria-hidden="true" />
-      <div className="brand-glow-b" aria-hidden="true" />
-      <div className="brand-watermark" aria-hidden="true">
-        <CrossSvg size={320} />
+    <div ref={ref} style={{
+      position: "absolute", right: 0, top: "calc(100% + 8px)",
+      width: 320, maxHeight: 380, background: "var(--white)",
+      borderRadius: 12, boxShadow: "0 8px 30px rgba(20,33,61,0.15)",
+      border: "1px solid var(--gold-pale)", zIndex: 50,
+      display: "flex", flexDirection: "column", overflow: "hidden",
+    }}>
+      <div style={{
+        padding: "0.85rem 1rem", borderBottom: "1px solid var(--gold-pale)",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <h3 style={{ margin: 0, fontSize: "0.9rem", fontWeight: 700, color: "var(--navy)", fontFamily: "'Cinzel',serif" }}>
+          Notifications
+        </h3>
+        <span style={{
+          fontSize: "0.68rem", padding: "0.2rem 0.6rem", borderRadius: 20,
+          background: "var(--gold-pale)", color: "var(--navy)", fontWeight: 600,
+        }}>
+          {notifData.filter(n => !n.read).length} new
+        </span>
       </div>
-
-      {/* Logo */}
-      <div className="brand-top">
-        <a href="/DashBoard">
-          <div className="brand-logo-mark">
-            <CrossSvg size={22} />
-          </div>
-          <div className="brand-logo-text">
-            <span className="brand-logo-name">Westlands P.A.G</span>
-            <span className="brand-logo-tagline">Church Management</span>
-          </div>
-        </a>
-      </div>
-
-      {/* Headline + Steps */}
-      <div className="brand-mid">
-        <h2 className="brand-headline">
-          Join Your <em>Community</em> Hub Today
-        </h2>
-        <p className="brand-body">
-          Create your account in minutes and unlock full access to congregation
-          management, giving records, and event coordination.
-        </p>
-
-        <div className="brand-steps" role="list">
-          {STEPS.map(({ title, sub }, i) => (
-            <div key={title} className="brand-step" role="listitem">
-              <div className="brand-step-num">{i + 1}</div>
-              <div className="brand-step-text">
-                <span className="brand-step-title">{title}</span>
-                <span className="brand-step-sub">{sub}</span>
-              </div>
+      <ul style={{ listStyle: "none", margin: 0, padding: 0, overflowY: "auto", flex: 1 }}>
+        {notifData.map(n => (
+          <li key={n.id} style={{
+            padding: "0.85rem 1rem", display: "flex", gap: "0.75rem",
+            borderBottom: "1px solid var(--gold-pale)",
+            background: !n.read ? "rgba(201,168,76,0.05)" : "transparent",
+          }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--gold)", flexShrink: 0, marginTop: 5 }} />
+            <div>
+              <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--navy)", lineHeight: 1.5 }}>{n.message}</p>
+              <p style={{ margin: "0.2rem 0 0", fontSize: "0.7rem", color: "var(--text-body)" }}>{n.time}</p>
             </div>
-          ))}
+          </li>
+        ))}
+      </ul>
+      <div style={{ padding: "0.75rem 1rem", textAlign: "center", borderTop: "1px solid var(--gold-pale)" }}>
+        <button style={{ background: "none", border: "none", color: "var(--gold)", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", fontFamily: "'Lato',sans-serif" }}>
+          Mark all as read
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Navbar / Header ────────────────────────────────────────────────────────── */
+function Navbar() {
+  const { section, setSidebarOpen } = useDash();
+  const { user } = useAuth();
+  const [showNotif, setShowNotif] = useState(false);
+  const unread = notifData.filter(n => !n.read).length;
+
+  const firstName = user?.firstName || "User";
+  const lastName  = user?.lastName  || "";
+  const role      = user?.role      || "Member";
+
+  return (
+    <header style={{
+      background: "var(--white)", borderBottom: "2px solid var(--gold-pale)",
+      padding: "1rem 1.5rem",
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      boxShadow: "0 2px 8px rgba(20,33,61,0.06)", gap: "1rem", flexShrink: 0,
+    }}>
+      {/* Left: hamburger + title */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0 }}>
+        <button
+          onClick={() => setSidebarOpen(v => !v)}
+          style={{ background: "none", border: "none", fontSize: "1.4rem", cursor: "pointer", color: "var(--navy)", padding: "0.25rem 0.5rem", borderRadius: 6, flexShrink: 0, lineHeight: 1 }}
+          aria-label="Toggle menu"
+        >☰</button>
+        <div style={{ minWidth: 0 }}>
+          <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "var(--navy)", fontFamily: "'Cinzel',serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {SECTION_TITLES[section] || "Dashboard"}
+          </h2>
+          <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--text-body)" }}>
+            {new Date().toLocaleDateString("en-KE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          </p>
         </div>
       </div>
 
-      <div className="brand-bottom">
-        &copy; {new Date().getFullYear()} Westlands P.A.G. All rights reserved.
+      {/* Right: notifications + user */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
+        {/* Notification bell */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setShowNotif(v => !v)}
+            style={{
+              position: "relative", background: "none", border: "none",
+              cursor: "pointer", padding: "0.5rem", borderRadius: 8,
+              color: "var(--text-body)", fontSize: "1.25rem",
+              transition: "background 0.2s",
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = "var(--cream)"}
+            onMouseLeave={e => e.currentTarget.style.background = "none"}
+            aria-label="Notifications"
+          >
+            🔔
+            {unread > 0 && (
+              <span style={{
+                position: "absolute", top: 6, right: 6,
+                width: 8, height: 8, borderRadius: "50%",
+                background: "var(--gold)", border: "2px solid var(--white)",
+              }} />
+            )}
+          </button>
+          {showNotif && <NotifPanel onClose={() => setShowNotif(false)} />}
+        </div>
+
+        <div style={{ width: 1, height: 24, background: "var(--gold-pale)" }} />
+
+        {/* User chip */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <Avatar firstName={firstName} lastName={lastName} size={34} />
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--navy)", lineHeight: 1.2 }}>{firstName}</span>
+            <span style={{ fontSize: "0.68rem", color: "var(--text-body)" }}>{role}</span>
+          </div>
+        </div>
       </div>
-    </aside>
+    </header>
+  );
+}
+
+/* ─── Dashboard Overview ─────────────────────────────────────────────────────── */
+function DashboardOverview() {
+  const { user } = useAuth();
+  const { setSection } = useDash();
+  const firstName = user?.firstName || "Member";
+  const lastName  = user?.lastName  || "";
+  const total     = contributions.reduce((s, c) => s + c.amount, 0);
+
+  const stats = [
+    { label: "Total Contributions", value: fmtCur(total), icon: "💰", border: "var(--gold)", sub: "+12% this month" },
+    { label: "Events Attended",     value: "23",          icon: "⛪", border: "var(--navy)", sub: "This year" },
+    { label: "Upcoming Events",     value: String(upcomingEvents.length), icon: "📅", border: "var(--success)", sub: "Next 7 days" },
+    { label: "Notifications",       value: String(notifData.filter(n => !n.read).length), icon: "🔔", border: "var(--danger)", sub: "Unread" },
+  ];
+
+  return (
+    <div className="ud-fadeup" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {/* Welcome Banner */}
+      <div style={{
+        borderRadius: 16, padding: "1.75rem 2rem", position: "relative", overflow: "hidden",
+        background: "linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 55%,var(--navy-light) 100%)",
+      }}>
+        <div style={{ position:"absolute", top:-80, right:-80, width:220, height:220, borderRadius:"50%", background:"rgba(201,168,76,0.07)", pointerEvents:"none" }} />
+        <div style={{ position:"relative", zIndex:1, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem" }}>
+          <div>
+            <p style={{ margin:"0 0 0.4rem", fontSize:"0.65rem", fontWeight:600, textTransform:"uppercase", letterSpacing:"0.2em", color:"var(--gold)" }}>
+              Welcome Back
+            </p>
+            <h2 style={{ margin:"0 0 0.3rem", fontFamily:"'Cinzel',serif", fontSize:"clamp(1.4rem,3vw,2rem)", fontWeight:700, color:"var(--cream)" }}>
+              {firstName} {lastName} 👋
+            </h2>
+            <p style={{ margin:0, fontSize:"0.82rem", color:"var(--text-light)" }}>
+              {user?.department || "Westlands P.A.G"} · {user?.role || "Member"}
+            </p>
+          </div>
+          <div style={{
+            padding:"0.9rem 1.4rem", borderRadius:10, textAlign:"center",
+            background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.12)",
+          }}>
+            <p style={{ margin:"0 0 0.2rem", fontSize:"0.65rem", textTransform:"uppercase", letterSpacing:"0.1em", color:"rgba(247,244,238,0.5)" }}>Member Since</p>
+            <p style={{ margin:0, fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"1rem", color:"var(--gold)" }}>
+              {user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-KE",{month:"short",year:"numeric"}) : "Apr 2026"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stat Cards */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:"1rem" }}>
+        {stats.map((s, i) => (
+          <div key={i} className="ud-card ud-stat-card" style={{ borderLeftColor: s.border, padding:"1.25rem" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"0.75rem" }}>
+              <p style={{ margin:0, fontSize:"0.7rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.07em", color:"var(--text-body)" }}>{s.label}</p>
+              <span style={{ fontSize:"1.25rem" }}>{s.icon}</span>
+            </div>
+            <p style={{ margin:"0 0 0.3rem", fontSize:"1.6rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif" }}>{s.value}</p>
+            <p style={{ margin:0, fontSize:"0.72rem", color:"var(--text-body)" }}>{s.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Two-column: Activities + Events preview */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:"1.5rem" }}>
+        {/* Recent Activity */}
+        <div className="ud-card">
+          <div className="ud-section-header">
+            <h3 style={{ margin:0, fontSize:"0.9rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif" }}>Recent Activity</h3>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column" }}>
+            {recentActivities.slice(0,4).map(a => (
+              <div key={a.id} style={{
+                padding:"0.85rem 1.25rem", display:"flex", alignItems:"center", gap:"0.85rem",
+                borderBottom:"1px solid var(--gold-pale)",
+                transition:"background 0.2s",
+              }}
+                onMouseEnter={e=>e.currentTarget.style.background="var(--cream)"}
+                onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+              >
+                <div style={{
+                  width:36, height:36, borderRadius:8, flexShrink:0,
+                  background:"var(--gold-pale)", display:"grid", placeItems:"center", fontSize:"1.1rem",
+                }}>{a.icon}</div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <p style={{ margin:0, fontSize:"0.82rem", fontWeight:600, color:"var(--navy)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{a.action}</p>
+                  {a.amount && <p style={{ margin:"0.1rem 0 0", fontSize:"0.72rem", fontWeight:700, color:"var(--gold)" }}>{fmtCur(a.amount)}</p>}
+                </div>
+                <span style={{ fontSize:"0.7rem", color:"var(--text-body)", whiteSpace:"nowrap", flexShrink:0 }}>{fmtDate(a.date)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Upcoming Events preview */}
+        <div className="ud-card">
+          <div className="ud-section-header">
+            <h3 style={{ margin:0, fontSize:"0.9rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif" }}>Upcoming Events</h3>
+            <button onClick={() => setSection("events")} style={{
+              background:"var(--gold-pale)", border:"none", color:"var(--navy)",
+              padding:"0.3rem 0.75rem", borderRadius:20, fontSize:"0.72rem",
+              fontWeight:600, cursor:"pointer", fontFamily:"'Lato',sans-serif",
+              transition:"all 0.2s",
+            }}
+              onMouseEnter={e=>{e.currentTarget.style.background="var(--gold)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="var(--gold-pale)";}}
+            >View all</button>
+          </div>
+          <div>
+            {upcomingEvents.slice(0,3).map(ev => {
+              const d = new Date(ev.date);
+              return (
+                <div key={ev.id} style={{
+                  padding:"0.85rem 1.25rem", display:"flex", alignItems:"center", gap:"0.85rem",
+                  borderBottom:"1px solid var(--gold-pale)", transition:"background 0.2s",
+                }}
+                  onMouseEnter={e=>e.currentTarget.style.background="var(--cream)"}
+                  onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+                >
+                  <div style={{
+                    width:40, textAlign:"center", background:"var(--cream)",
+                    borderRadius:8, padding:"0.35rem 0.4rem", border:"1px solid var(--gold-pale)", flexShrink:0,
+                  }}>
+                    <p style={{ margin:0, fontSize:"0.6rem", color:"var(--text-body)", textTransform:"uppercase" }}>{d.toLocaleDateString("en-KE",{weekday:"short"})}</p>
+                    <p style={{ margin:0, fontSize:"1.1rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif" }}>{d.getDate()}</p>
+                    <p style={{ margin:0, fontSize:"0.6rem", color:"var(--text-body)", textTransform:"uppercase" }}>{d.toLocaleDateString("en-KE",{month:"short"})}</p>
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ margin:"0 0 0.2rem", fontSize:"0.82rem", fontWeight:600, color:"var(--navy)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{ev.name}</p>
+                    <p style={{ margin:0, fontSize:"0.7rem", color:"var(--text-body)" }}>🕐 {ev.time} · 📍 {ev.location}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Contributions preview */}
+      <ContributionsSection limit={4} />
+    </div>
+  );
+}
+
+/* ─── Profile Section ────────────────────────────────────────────────────────── */
+function ProfileSection() {
+  const { user } = useAuth();
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    firstName:  user?.firstName  || "",
+    lastName:   user?.lastName   || "",
+    phone:      user?.phone      || "",
+    department: user?.department || "",
+  });
+
+  const firstName  = user?.firstName  || "User";
+  const lastName   = user?.lastName   || "";
+  const memberSince = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString("en-KE", { month: "long", year: "numeric" })
+    : "—";
+
+  return (
+    <div className="ud-fadeup" style={{ display:"flex", flexDirection:"column", gap:"1.5rem" }}>
+      <div className="ud-card" style={{ overflow:"hidden" }}>
+        {/* Banner */}
+        <div style={{ height:100, background:"linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 55%,var(--navy-light) 100%)" }} />
+        <div style={{ padding:"0 1.5rem 1.75rem" }}>
+          <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginTop:-30, marginBottom:"1rem", flexWrap:"wrap", gap:"0.75rem" }}>
+            <div style={{
+              width:70, height:70, borderRadius:12, flexShrink:0,
+              background:"linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%)",
+              color:"var(--navy)", display:"flex", alignItems:"center", justifyContent:"center",
+              fontWeight:700, fontSize:"1.5rem", boxShadow:"0 4px 16px rgba(201,168,76,0.35)",
+              fontFamily:"'Lato',sans-serif",
+            }}>
+              {getInitials(firstName, lastName)}
+            </div>
+            <button
+              onClick={() => setEditing(e => !e)}
+              style={{
+                padding:"0.6rem 1.2rem", borderRadius:8, border:"none", cursor:"pointer",
+                background: editing ? "linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%)" : "var(--cream-dark)",
+                color:"var(--navy)", fontWeight:600, fontSize:"0.85rem",
+                fontFamily:"'Lato',sans-serif", transition:"all 0.2s",
+                display:"flex", alignItems:"center", gap:"0.4rem",
+              }}
+              onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}
+              onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}
+            >
+              {editing ? "✓ Save Changes" : "✏️ Edit Profile"}
+            </button>
+          </div>
+
+          <h2 style={{ margin:"0 0 0.2rem", fontFamily:"'Cinzel',serif", fontSize:"1.25rem", fontWeight:700, color:"var(--navy)" }}>
+            {firstName} {lastName}
+          </h2>
+          <p style={{ margin:"0 0 1.25rem", fontSize:"0.82rem", color:"var(--text-body)" }}>
+            {user?.role || "Member"} · Member since {memberSince}
+          </p>
+
+          {editing ? (
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:"1rem" }}>
+              {[["First Name","firstName"],["Last Name","lastName"],["Phone","phone"],["Department","department"]].map(([label,key]) => (
+                <div key={key}>
+                  <label style={{ display:"block", marginBottom:"0.35rem", fontSize:"0.7rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", color:"var(--navy)" }}>{label}</label>
+                  <input
+                    type="text" value={form[key]}
+                    onChange={e => setForm(f => ({...f,[key]:e.target.value}))}
+                    className="ud-input"
+                  />
+                </div>
+              ))}
+              <div style={{ gridColumn:"1/-1" }}>
+                <label style={{ display:"block", marginBottom:"0.35rem", fontSize:"0.7rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", color:"var(--navy)" }}>Email</label>
+                <input type="email" value={user?.email || ""} disabled className="ud-input" />
+              </div>
+            </div>
+          ) : (
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:"1.25rem" }}>
+              {[
+                ["Email",       user?.email       || "—"],
+                ["Phone",       user?.phone       || "—"],
+                ["Department",  user?.department  || "—"],
+                ["Member Since",memberSince],
+              ].map(([label,val]) => (
+                <div key={label}>
+                  <p style={{ margin:"0 0 0.2rem", fontSize:"0.68rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", color:"var(--text-body)" }}>{label}</p>
+                  <p style={{ margin:0, fontSize:"0.88rem", fontWeight:600, color:"var(--navy)" }}>{val}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Contributions Section ──────────────────────────────────────────────────── */
+const TYPE_COLORS = {
+  Tithe:          { bg:"rgba(201,168,76,0.12)",  color:"var(--navy)"   },
+  Offering:       { bg:"rgba(59,130,246,0.12)",  color:"#1d4ed8"       },
+  Donation:       { bg:"rgba(61,153,112,0.12)",  color:"var(--success)" },
+  "Building Fund":{ bg:"rgba(139,92,246,0.12)",  color:"#6d28d9"       },
+};
+
+function ContributionsSection({ limit }) {
+  const data  = limit ? contributions.slice(0, limit) : contributions;
+  const total = contributions.reduce((s, c) => s + c.amount, 0);
+
+  return (
+    <div className={limit ? "" : "ud-fadeup"} style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
+      <div className="ud-card" style={{ overflow:"hidden" }}>
+        <div className="ud-section-header">
+          <div>
+            <h3 style={{ margin:"0 0 0.15rem", fontSize:"0.9rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif" }}>My Contributions</h3>
+            <p style={{ margin:0, fontSize:"0.72rem", color:"var(--text-body)" }}>
+              Total: <strong style={{ color:"var(--gold)" }}>{fmtCur(total)}</strong>
+            </p>
+          </div>
+          <span className="ud-badge" style={{ background:"var(--cream)", color:"var(--text-body)" }}>{data.length} records</span>
+        </div>
+
+        {/* Desktop table */}
+        <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
+          <table style={{ width:"100%", minWidth:520, borderCollapse:"collapse" }}>
+            <thead style={{ background:"var(--cream)" }}>
+              <tr>
+                {["Type","Amount","Date","Status","Receipt"].map(h => (
+                  <th key={h} style={{ padding:"0.75rem 1.25rem", textAlign:"left", fontSize:"0.68rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.07em", color:"var(--navy)", whiteSpace:"nowrap" }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.map(c => {
+                const tc = TYPE_COLORS[c.type] || { bg:"var(--cream)", color:"var(--navy)" };
+                return (
+                  <tr key={c.id} className="ud-tr" style={{ borderBottom:"1px solid var(--gold-pale)", transition:"background 0.2s" }}>
+                    <td style={{ padding:"0.85rem 1.25rem" }}>
+                      <span className="ud-badge" style={{ background:tc.bg, color:tc.color }}>{c.type}</span>
+                    </td>
+                    <td style={{ padding:"0.85rem 1.25rem", fontWeight:700, color:"var(--navy)", fontSize:"0.88rem" }}>{fmtCur(c.amount)}</td>
+                    <td style={{ padding:"0.85rem 1.25rem", color:"var(--text-body)", fontSize:"0.82rem" }}>{fmtDate(c.date)}</td>
+                    <td style={{ padding:"0.85rem 1.25rem" }}>
+                      <span style={{ display:"inline-flex", alignItems:"center", gap:"0.35rem", fontSize:"0.75rem", fontWeight:600, color:"var(--success)" }}>
+                        <span style={{ width:6, height:6, borderRadius:"50%", background:"var(--success)", flexShrink:0 }} />
+                        {c.status}
+                      </span>
+                    </td>
+                    <td style={{ padding:"0.85rem 1.25rem" }}>
+                      <button style={{
+                        background:"none", border:"1px solid var(--gold-pale)", color:"var(--text-body)",
+                        padding:"0.3rem 0.7rem", borderRadius:6, cursor:"pointer", fontSize:"0.72rem",
+                        fontFamily:"'Lato',sans-serif", transition:"all 0.2s",
+                      }}
+                        onMouseEnter={e=>{e.currentTarget.style.borderColor="var(--gold)";e.currentTarget.style.color="var(--navy)";}}
+                        onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--gold-pale)";e.currentTarget.style.color="var(--text-body)";}}
+                      >
+                        ↓ Receipt
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Events Section ─────────────────────────────────────────────────────────── */
+const CAT_COLORS = {
+  Worship:    { bg:"rgba(201,168,76,0.12)", color:"var(--navy)"   },
+  Fellowship: { bg:"rgba(59,130,246,0.12)", color:"#1d4ed8"       },
+  Prayer:     { bg:"rgba(139,92,246,0.12)", color:"#6d28d9"       },
+  Ministry:   { bg:"rgba(61,153,112,0.12)", color:"var(--success)" },
+};
+
+function EventsSection({ limit }) {
+  const data = limit ? upcomingEvents.slice(0, limit) : upcomingEvents;
+
+  return (
+    <div className="ud-fadeup" style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
+      <div className="ud-card" style={{ overflow:"hidden" }}>
+        <div className="ud-section-header">
+          <div>
+            <h3 style={{ margin:"0 0 0.15rem", fontSize:"0.9rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif" }}>Upcoming Events</h3>
+            <p style={{ margin:0, fontSize:"0.72rem", color:"var(--text-body)" }}>{data.length} events coming up</p>
+          </div>
+        </div>
+        <div>
+          {data.map(ev => {
+            const d = new Date(ev.date);
+            const cc = CAT_COLORS[ev.category] || { bg:"var(--cream)", color:"var(--navy)" };
+            return (
+              <div key={ev.id} style={{
+                padding:"1rem 1.25rem", display:"flex", alignItems:"center", gap:"1rem",
+                borderBottom:"1px solid var(--gold-pale)", transition:"background 0.2s",
+                flexWrap:"wrap",
+              }}
+                onMouseEnter={e=>e.currentTarget.style.background="var(--cream)"}
+                onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+              >
+                {/* Date badge */}
+                <div style={{
+                  width:48, textAlign:"center", background:"var(--cream)",
+                  borderRadius:8, padding:"0.4rem", border:"1px solid var(--gold-pale)", flexShrink:0,
+                }}>
+                  <p style={{ margin:0, fontSize:"0.6rem", color:"var(--text-body)", textTransform:"uppercase", fontWeight:600 }}>{d.toLocaleDateString("en-KE",{weekday:"short"})}</p>
+                  <p style={{ margin:0, fontSize:"1.35rem", fontWeight:700, color:"var(--navy)", fontFamily:"'Cinzel',serif", lineHeight:1.1 }}>{d.getDate()}</p>
+                  <p style={{ margin:0, fontSize:"0.6rem", color:"var(--text-body)", textTransform:"uppercase" }}>{d.toLocaleDateString("en-KE",{month:"short"})}</p>
+                </div>
+                <div style={{ flex:1, minWidth:150 }}>
+                  <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:"0.75rem", marginBottom:"0.4rem", flexWrap:"wrap" }}>
+                    <h4 style={{ margin:0, fontSize:"0.9rem", fontWeight:700, color:"var(--navy)" }}>{ev.name}</h4>
+                    <span className="ud-badge" style={{ background:cc.bg, color:cc.color }}>{ev.category}</span>
+                  </div>
+                  <p style={{ margin:0, fontSize:"0.75rem", color:"var(--text-body)" }}>🕐 {ev.time} &nbsp;·&nbsp; 📍 {ev.location}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Root Component ─────────────────────────────────────────────────────────── */
+export default function UserDashboard() {
+  const [section,     setSection]     = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoading,   setIsLoading]   = useState(true);
+  const { isAuthenticated, user, isInitialized } = useAuth();
+  const navigate = useNavigate();
+
+  // Inject theme CSS once
+  useEffect(() => {
+    const id = "user-dash-theme-css";
+    if (!document.getElementById(id)) {
+      const tag = document.createElement("style");
+      tag.id = id;
+      tag.textContent = THEME_CSS;
+      document.head.appendChild(tag);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isInitialized && !isAuthenticated && !user) {
+      navigate("/login", { replace: true });
+    }
+  }, [isInitialized, isAuthenticated, user, navigate]);
+
+  useEffect(() => {
+    setIsLoading(true);
+    const t = setTimeout(() => setIsLoading(false), 400);
+    return () => clearTimeout(t);
+  }, [section]);
+
+  // Handle responsive sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) setSidebarOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  if (!isInitialized) {
+    return (
+      <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center", background:"var(--cream,#f7f4ee)" }}>
+        <div style={{ textAlign:"center" }}>
+          <div style={{ width:48, height:48, borderRadius:"50%", border:"3px solid rgba(201,168,76,0.3)", borderTopColor:"var(--gold,#c9a84c)", margin:"0 auto 1rem", animation:"spin 0.8s linear infinite" }} />
+          <p style={{ color:"var(--text-body,#5a6478)", fontFamily:"'Lato',sans-serif" }}>Loading dashboard…</p>
+        </div>
+      </div>
+    );
+  }
+
+  const renderSection = () => {
+    if (isLoading) return <SkeletonOverview />;
+    switch (section) {
+      case "dashboard":     return <DashboardOverview />;
+      case "profile":       return <ProfileSection />;
+      case "contributions": return <ContributionsSection />;
+      case "events":        return <EventsSection />;
+      default:              return <DashboardOverview />;
+    }
+  };
+
+  return (
+    <DashboardCtx.Provider value={{ section, setSection, sidebarOpen, setSidebarOpen }}>
+      <div
+        className="user-dash"
+        style={{ display:"flex", height:"100vh", background:"var(--cream)", overflow:"hidden", position:"relative" }}
+      >
+        {/* Sidebar — always rendered; on desktop it's static, on mobile it overlays */}
+        <div style={{
+          // Desktop: always visible; Mobile: hidden unless open
+          display: "flex",
+          flexShrink: 0,
+        }}>
+          {/* Desktop persistent sidebar */}
+          <div style={{
+            width:"16rem", minWidth:"16rem", height:"100vh",
+            background:"linear-gradient(160deg,var(--navy) 0%,var(--navy-mid) 55%,var(--navy-light) 100%)",
+            display: window.innerWidth < 768 ? "none" : "flex",
+            flexDirection:"column",
+            boxShadow:"0 4px 20px rgba(20,33,61,0.15)",
+          }}
+            className="ud-desktop-sidebar"
+          >
+            <SidebarContent />
+          </div>
+        </div>
+
+        {/* Mobile overlay sidebar */}
+        {sidebarOpen && (
+          <>
+            <div
+              onClick={() => setSidebarOpen(false)}
+              style={{ position:"fixed", inset:0, background:"rgba(20,33,61,0.5)", zIndex:199 }}
+            />
+            <div style={{
+              position:"fixed", top:0, left:0, height:"100vh", width:"16rem",
+              background:"linear-gradient(160deg,var(--navy) 0%,var(--navy-mid) 55%,var(--navy-light) 100%)",
+              display:"flex", flexDirection:"column", zIndex:200,
+              boxShadow:"4px 0 20px rgba(20,33,61,0.2)",
+            }}>
+              <SidebarContent />
+            </div>
+          </>
+        )}
+
+        {/* Main content */}
+        <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", minWidth:0 }}>
+          <Navbar />
+          <main style={{ flex:1, overflowY:"auto", padding:"1.5rem 2rem" }}>
+            <div style={{ maxWidth:1100, margin:"0 auto" }}>
+              {renderSection()}
+            </div>
+          </main>
+        </div>
+      </div>
+    </DashboardCtx.Provider>
+  );
+}
+
+/* ─── Sidebar Content (shared between desktop + mobile) ──────────────────────── */
+function SidebarContent() {
+  const { section, setSection, setSidebarOpen } = useDash();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const nav = (id) => { setSection(id); setSidebarOpen(false); };
+
+  return (
+    <>
+      {/* Logo */}
+      <div style={{
+        padding:"1rem 1.25rem", borderBottom:"1px solid var(--gold-pale)",
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+      }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"0.6rem" }}>
+          <div style={{
+            width:36, height:36, borderRadius:8, flexShrink:0,
+            background:"linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%)",
+            display:"grid", placeItems:"center",
+            boxShadow:"0 4px 12px rgba(201,168,76,0.3)",
+          }}>
+            <CrossIcon size={16} />
+          </div>
+          <div>
+            <p style={{ margin:0, fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"1rem", letterSpacing:"0.06em", color:"var(--cream)" }}>
+              Westlands
+            </p>
+            <p style={{ margin:0, fontSize:"0.6rem", letterSpacing:"0.2em", textTransform:"uppercase", color:"var(--gold)" }}>
+              P.A.G Church
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setSidebarOpen(false)}
+          style={{ background:"none", border:"none", color:"rgba(247,244,238,0.4)", cursor:"pointer", fontSize:"1.1rem", padding:"0.2rem", borderRadius:4, lineHeight:1 }}
+          aria-label="Close"
+        >✕</button>
+      </div>
+
+      {/* Nav */}
+      <nav style={{ flex:1, padding:"1rem", display:"flex", flexDirection:"column", gap:"0.25rem", overflowY:"auto" }}>
+        <p style={{ margin:"0 0 0.5rem 0.5rem", fontSize:"0.62rem", textTransform:"uppercase", letterSpacing:"0.18em", color:"rgba(247,244,238,0.28)", fontWeight:600 }}>
+          Menu
+        </p>
+        {NAV.map(item => (
+          <button
+            key={item.id}
+            onClick={() => nav(item.id)}
+            className={`ud-nav-btn${section === item.id ? " active" : ""}`}
+          >
+            <span style={{ fontSize:"1.1rem", flexShrink:0 }}>{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* Logout */}
+      <div style={{ borderTop:"1px solid var(--gold-pale)", padding:"1rem" }}>
+        <button
+          onClick={() => { logout(); navigate("/login",{replace:true}); }}
+          style={{
+            width:"100%", background:"var(--danger)", border:"none",
+            color:"var(--cream)", fontWeight:600, padding:"0.6rem 1rem",
+            borderRadius:8, cursor:"pointer", transition:"all 0.2s",
+            display:"flex", alignItems:"center", justifyContent:"center", gap:"0.5rem",
+            fontSize:"0.88rem", fontFamily:"'Lato',sans-serif",
+          }}
+          onMouseEnter={e=>e.currentTarget.style.opacity="0.88"}
+          onMouseLeave={e=>e.currentTarget.style.opacity="1"}
+        >
+          🚪 Logout
+        </button>
+      </div>
+    </>
   );
 }
